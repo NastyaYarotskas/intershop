@@ -13,12 +13,12 @@
     <b>ГЛАВНАЯ &cudarrr;</b>
 </a>
 <table style="width:70%;margin-left:auto;margin-right:auto;">
-    <tr th:each="item : ${items}">
+    <tr th:each="item : ${order.getItems()}">
         <td>
             <table>
                 <tr>
                     <td>
-                        <img width="300" height="300" th:src="${'http://localhost:8080/'+item.getImgPath()}">
+                        <img width="300" height="300" th:src="@{'data:image/jpeg;base64,'+${item.getImg()}}">
                     </td>
                 </tr>
                 <tr>
@@ -33,10 +33,10 @@
                 <tr>
                     <td>
                         <form th:action="${'/cart/items/'+item.getId()}" method="post">
-                            <button name="action" value="minus">-</button>
+                            <button name="action" value="MINUS">-</button>
                             <span th:text="${item.getCount()}"></span>
-                            <button name="action" value="plus">+</button>
-                            <button name="action" value="delete" style="float:right;">&cross;</button>
+                            <button name="action" value="PLUS">+</button>
+                            <button name="action" value="DELETE" style="float:right;">&cross;</button>
                         </form>
                     </td>
                 </tr>
@@ -45,12 +45,12 @@
     </tr>
     <tr>
         <td style="text-align:right">
-            <b th:text="'Итого: '+${total}+' руб.'"></b>
+            <b th:text="'Итого: '+${order.getTotalSum()}+' руб.'"></b>
         </td>
     </tr>
     <tr>
         <td style="text-align:right">
-            <form action="/buy" method="post" th:if="${!empty}">
+            <form action="/buy" method="post" th:if="${!order.getItems().isEmpty()}">
                 <button>Купить</button>
             </form>
         </td>
