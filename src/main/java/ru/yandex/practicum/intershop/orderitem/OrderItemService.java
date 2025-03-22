@@ -4,6 +4,8 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.intershop.item.Item;
 import ru.yandex.practicum.intershop.order.Order;
 
+import java.util.Optional;
+
 @Service
 public class OrderItemService {
 
@@ -24,6 +26,11 @@ public class OrderItemService {
                     newOrderItem.setCount(0);
                     return orderItemRepository.save(newOrderItem);
                 });
+    }
+
+    public Optional<OrderItem> findOrderItem(Order order, Item item) {
+        OrderItemId orderItemId = new OrderItemId(order.getId(), item.getId());
+        return orderItemRepository.findById(orderItemId);
     }
 
     public void addItemToOrder(Order order, Item item) {

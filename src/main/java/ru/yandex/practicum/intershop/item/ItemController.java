@@ -1,7 +1,5 @@
 package ru.yandex.practicum.intershop.item;
 
-import jakarta.websocket.server.PathParam;
-import org.aspectj.weaver.ast.Or;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,16 +7,12 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import ru.yandex.practicum.intershop.order.Order;
-import ru.yandex.practicum.intershop.order.OrderRepository;
 import ru.yandex.practicum.intershop.order.OrderService;
 import ru.yandex.practicum.intershop.orderitem.OrderItem;
-import ru.yandex.practicum.intershop.orderitem.OrderItemId;
-import ru.yandex.practicum.intershop.orderitem.OrderItemRepository;
+import ru.yandex.practicum.intershop.orderitem.OrderItemService;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -27,31 +21,28 @@ import java.util.stream.IntStream;
 public class ItemController {
 
     private final ItemService itemService;
-    private final ItemMapper itemMapper;
     private final OrderService orderService;
-    private final OrderRepository orderRepository;
-    private final ItemRepository itemRepository;
-    private final OrderItemRepository orderItemRepository;
+    private final OrderItemService orderItemService;
 
-    public ItemController(ItemService itemService, ItemMapper itemMapper, OrderService orderService, OrderRepository orderRepository, ItemRepository itemRepository, OrderItemRepository orderItemRepository) {
+    public ItemController(ItemService itemService,
+                          OrderService orderService,
+                          OrderItemService orderItemService) {
         this.itemService = itemService;
-        this.itemMapper = itemMapper;
         this.orderService = orderService;
-        this.orderRepository = orderRepository;
-        this.itemRepository = itemRepository;
-        this.orderItemRepository = orderItemRepository;
+        this.orderItemService = orderItemService;
     }
 
     @GetMapping(value = {"/main/items", "/"})
     @Transactional(readOnly = true)
-    public String findAll(@ModelAttribute GetItemsRequest request, Model model) {
+    public String findItems(@ModelAttribute GetItemsRequest request, Model model) {
         Page<Item> foundItems = itemService.findAll(request);
-        List<Item> itemList = foundItems.getContent();
+        List<Item> content = foundItems.getContent();
 
-        List<ItemDto> itemDtos = itemList.stream().map(itemMapper::mapTo).toList();
+        List<ItemDto> items = ItemMapper.mapTo(content);
 
         Order order = orderService.findActiveOrder().orElse(new Order());
-        for (ItemDto item : itemDtos) {
+
+        for (ItemDto item : items) {
             for (OrderItem orderItem : order.getItems()) {
                 if (item.getId().equals(orderItem.getId().getItemId())) {
                     item.setCount(orderItem.getCount());
@@ -59,141 +50,36 @@ public class ItemController {
             }
         }
 
-        List<List<ItemDto>> items = IntStream.range(0, (itemDtos.size() + 2) / 3)
-                .mapToObj(i -> itemDtos.subList(i * 3, Math.min((i + 1) * 3, itemDtos.size())))
+        List<List<ItemDto>> itemTable = IntStream.range(0, (items.size() + 2) / 3)
+                .mapToObj(i -> items.subList(i * 3, Math.min((i + 1) * 3, items.size())))
                 .collect(Collectors.toList());
 
-        model.addAttribute("items", items);
+        model.addAttribute("items", itemTable);
 
         int pageNumber = request.getPageNumber() == 0 ? 1 : request.getPageNumber();
         int pageSize = request.getPageSize() == 0 ? 10 : request.getPageSize();
 
-        model.addAttribute("paging", new Paging(pageNumber, pageSize, foundItems.hasNext(), foundItems.hasPrevious()));
+        model.addAttribute("paging", new Paging(pageNumber, pageSize,
+                foundItems.hasNext(), foundItems.hasPrevious()));
         return "main";
     }
 
     @GetMapping("/items/{id}")
-    public String getById(@PathVariable("id") UUID itemId, Model model) {
-        Order activeOrder = orderRepository.findByIsNewTrue()
-                .orElseGet(() -> {
-                    Order newOrder = new Order();
-                    newOrder.setNew(true);
-                    return orderRepository.save(newOrder);
-                });
+    public String findItemById(@PathVariable("id") UUID itemId, Model model) {
+        Order activeOrder = orderService.findActiveOrderOrCreateNew();
 
-        Item item = itemRepository.findById(itemId)
+        Item item = itemService.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Item not found"));
 
-        OrderItemId orderItemId = new OrderItemId(activeOrder.getId(), itemId);
-        OrderItem orderItem = orderItemRepository.findById(orderItemId)
-                .orElseGet(() -> {
-                    OrderItem newOrderItem = new OrderItem();
-                    newOrderItem.setId(orderItemId);
-                    newOrderItem.setOrder(activeOrder);
-                    newOrderItem.setItem(item);
-                    newOrderItem.setCount(0); // Начальное количество
-                    return newOrderItem;
-                });
+        int orderItemCount = orderItemService.findOrderItem(activeOrder, item)
+                .map(OrderItem::getCount)
+                .orElse(0);
 
-        ItemDto itemDto = itemMapper.mapTo(item);
-        itemDto.setCount(orderItem.getCount());
+        ItemDto itemDto = ItemMapper.mapTo(item);
+        itemDto.setCount(orderItemCount);
 
         model.addAttribute("item", itemDto);
 
         return "item";
-    }
-
-    @PostMapping("/items/{id}")
-    public String modifyItemInCart(@PathVariable("id") UUID itemId, @PathParam("action") String action, Model model) {
-        // 1. Найти или создать новый заказ
-        Order activeOrder = orderRepository.findByIsNewTrue()
-                .orElseGet(() -> {
-                    Order newOrder = new Order();
-                    newOrder.setNew(true);
-                    return orderRepository.save(newOrder);
-                });
-
-        // 2. Найти товар по его id
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
-
-        // 3. Найти или создать OrderItem для данного заказа и товара
-        OrderItemId orderItemId = new OrderItemId(activeOrder.getId(), itemId);
-        OrderItem orderItem = orderItemRepository.findById(orderItemId)
-                .orElseGet(() -> {
-                    OrderItem newOrderItem = new OrderItem();
-                    newOrderItem.setId(orderItemId);
-                    newOrderItem.setOrder(activeOrder);
-                    newOrderItem.setItem(item);
-                    newOrderItem.setCount(0); // Начальное количество
-                    return orderItemRepository.save(newOrderItem);
-                });
-
-        // 4. Увеличить счетчик (count) в OrderItem
-        if ("plus".equals(action)) {
-            // Увеличить счетчик
-            orderItem.setCount(orderItem.getCount() + 1);
-            orderItemRepository.save(orderItem);
-        } else if ("minus".equals(action)) {
-            // Уменьшить счетчик (но не меньше 0)
-            orderItem.setCount(Math.max(orderItem.getCount() - 1, 0));
-            if (orderItem.getCount() == 0) {
-                // Если счетчик стал 0, удаляем OrderItem
-                orderItemRepository.delete(orderItem);
-            } else {
-                orderItemRepository.save(orderItem);
-            }
-        } else {
-            throw new IllegalArgumentException("Invalid action: " + action);
-        }
-
-        return "redirect:/items/" + itemId;
-    }
-
-    @PostMapping("/main/items/{id}")
-    public String modifyItemInCartFromMain(@PathVariable("id") UUID itemId, @PathParam("action") String action, Model model) {
-        // 1. Найти или создать новый заказ
-        Order activeOrder = orderRepository.findByIsNewTrue()
-                .orElseGet(() -> {
-                    Order newOrder = new Order();
-                    newOrder.setNew(true);
-                    return orderRepository.save(newOrder);
-                });
-
-        // 2. Найти товар по его id
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
-
-        // 3. Найти или создать OrderItem для данного заказа и товара
-        OrderItemId orderItemId = new OrderItemId(activeOrder.getId(), itemId);
-        OrderItem orderItem = orderItemRepository.findById(orderItemId)
-                .orElseGet(() -> {
-                    OrderItem newOrderItem = new OrderItem();
-                    newOrderItem.setId(orderItemId);
-                    newOrderItem.setOrder(activeOrder);
-                    newOrderItem.setItem(item);
-                    newOrderItem.setCount(0); // Начальное количество
-                    return orderItemRepository.save(newOrderItem);
-                });
-
-        // 4. Увеличить счетчик (count) в OrderItem
-        if ("plus".equals(action)) {
-            // Увеличить счетчик
-            orderItem.setCount(orderItem.getCount() + 1);
-            orderItemRepository.save(orderItem);
-        } else if ("minus".equals(action)) {
-            // Уменьшить счетчик (но не меньше 0)
-            orderItem.setCount(Math.max(orderItem.getCount() - 1, 0));
-            if (orderItem.getCount() == 0) {
-                // Если счетчик стал 0, удаляем OrderItem
-                orderItemRepository.delete(orderItem);
-            } else {
-                orderItemRepository.save(orderItem);
-            }
-        } else {
-            throw new IllegalArgumentException("Invalid action: " + action);
-        }
-
-        return "redirect:/";
     }
 }
