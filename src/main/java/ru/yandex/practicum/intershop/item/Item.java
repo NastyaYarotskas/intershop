@@ -1,13 +1,17 @@
 package ru.yandex.practicum.intershop.item;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 @Data
 @Entity
 @Table(name = "items")
+@NoArgsConstructor
+@AllArgsConstructor
 public class Item {
 
     @Id

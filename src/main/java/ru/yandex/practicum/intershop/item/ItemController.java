@@ -7,6 +7,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import ru.yandex.practicum.intershop.error.EntityNotFoundException;
 import ru.yandex.practicum.intershop.order.Order;
 import ru.yandex.practicum.intershop.order.OrderService;
 import ru.yandex.practicum.intershop.orderitem.OrderItem;
@@ -69,7 +70,7 @@ public class ItemController {
         Order activeOrder = orderService.findActiveOrderOrCreateNew();
 
         Item item = itemService.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new EntityNotFoundException(itemId));
 
         int orderItemCount = orderItemService.findOrderItem(activeOrder, item)
                 .map(OrderItem::getCount)
