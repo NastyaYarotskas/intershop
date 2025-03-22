@@ -18,6 +18,7 @@ import ru.yandex.practicum.intershop.orderitem.OrderItemId;
 import ru.yandex.practicum.intershop.orderitem.OrderItemRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -72,16 +73,85 @@ public class ItemController {
     }
 
     @GetMapping("/items/{id}")
-    public String getById(@PathVariable("id") UUID id, Model model) {
-        Item item = itemService.getById(id);
+    public String getById(@PathVariable("id") UUID itemId, Model model) {
+        Order activeOrder = orderRepository.findByIsNewTrue()
+                .orElseGet(() -> {
+                    Order newOrder = new Order();
+                    newOrder.setNew(true);
+                    return orderRepository.save(newOrder);
+                });
 
-        model.addAttribute("item", item);
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("Item not found"));
+
+        OrderItemId orderItemId = new OrderItemId(activeOrder.getId(), itemId);
+        OrderItem orderItem = orderItemRepository.findById(orderItemId)
+                .orElseGet(() -> {
+                    OrderItem newOrderItem = new OrderItem();
+                    newOrderItem.setId(orderItemId);
+                    newOrderItem.setOrder(activeOrder);
+                    newOrderItem.setItem(item);
+                    newOrderItem.setCount(0); // Начальное количество
+                    return newOrderItem;
+                });
+
+        ItemDto itemDto = itemMapper.mapTo(item);
+        itemDto.setCount(orderItem.getCount());
+
+        model.addAttribute("item", itemDto);
 
         return "item";
     }
 
-    @PostMapping("/main/items/{id}")
+    @PostMapping("/items/{id}")
     public String modifyItemInCart(@PathVariable("id") UUID itemId, @PathParam("action") String action, Model model) {
+        // 1. Найти или создать новый заказ
+        Order activeOrder = orderRepository.findByIsNewTrue()
+                .orElseGet(() -> {
+                    Order newOrder = new Order();
+                    newOrder.setNew(true);
+                    return orderRepository.save(newOrder);
+                });
+
+        // 2. Найти товар по его id
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new RuntimeException("Item not found"));
+
+        // 3. Найти или создать OrderItem для данного заказа и товара
+        OrderItemId orderItemId = new OrderItemId(activeOrder.getId(), itemId);
+        OrderItem orderItem = orderItemRepository.findById(orderItemId)
+                .orElseGet(() -> {
+                    OrderItem newOrderItem = new OrderItem();
+                    newOrderItem.setId(orderItemId);
+                    newOrderItem.setOrder(activeOrder);
+                    newOrderItem.setItem(item);
+                    newOrderItem.setCount(0); // Начальное количество
+                    return orderItemRepository.save(newOrderItem);
+                });
+
+        // 4. Увеличить счетчик (count) в OrderItem
+        if ("plus".equals(action)) {
+            // Увеличить счетчик
+            orderItem.setCount(orderItem.getCount() + 1);
+            orderItemRepository.save(orderItem);
+        } else if ("minus".equals(action)) {
+            // Уменьшить счетчик (но не меньше 0)
+            orderItem.setCount(Math.max(orderItem.getCount() - 1, 0));
+            if (orderItem.getCount() == 0) {
+                // Если счетчик стал 0, удаляем OrderItem
+                orderItemRepository.delete(orderItem);
+            } else {
+                orderItemRepository.save(orderItem);
+            }
+        } else {
+            throw new IllegalArgumentException("Invalid action: " + action);
+        }
+
+        return "redirect:/items/" + itemId;
+    }
+
+    @PostMapping("/main/items/{id}")
+    public String modifyItemInCartFromMain(@PathVariable("id") UUID itemId, @PathParam("action") String action, Model model) {
         // 1. Найти или создать новый заказ
         Order activeOrder = orderRepository.findByIsNewTrue()
                 .orElseGet(() -> {
