@@ -1,16 +1,14 @@
 package ru.yandex.practicum.intershop.order;
 
-import lombok.Data;
-import org.springframework.stereotype.Component;
+import lombok.experimental.UtilityClass;
 import ru.yandex.practicum.intershop.orderitem.OrderItemDto;
 
 import java.util.List;
 
-@Data
-@Component
+@UtilityClass
 public class OrderMapper {
 
-    public OrderDto mapTo(Order order) {
+    public static OrderDto mapTo(Order order) {
         List<OrderItemDto> itemDtos = order.getItems()
                 .stream()
                 .map(oi -> new OrderItemDto(
@@ -25,5 +23,9 @@ public class OrderMapper {
                 .toList();
 
         return new OrderDto(order.getId(), itemDtos);
+    }
+
+    public static List<OrderDto> mapTo(List<Order> orders) {
+        return orders.stream().map(OrderMapper::mapTo).toList();
     }
 }

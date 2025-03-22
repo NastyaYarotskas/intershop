@@ -1,6 +1,5 @@
 package ru.yandex.practicum.intershop.order;
 
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,14 +15,12 @@ public class OrderService {
         this.orderRepository = orderRepository;
     }
 
-    @Transactional
     public List<Order> findCompletedOrders() {
         return orderRepository.findByIsNewFalse();
     }
 
-    @Transactional
-    public Order getById(UUID id) {
-        return orderRepository.findById(id).get();
+    public Optional<Order> findById(UUID id) {
+        return orderRepository.findById(id);
     }
 
     public Optional<Order> findActiveOrder() {

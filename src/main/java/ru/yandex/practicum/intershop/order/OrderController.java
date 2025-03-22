@@ -13,18 +13,16 @@ import java.util.UUID;
 public class OrderController {
 
     private final OrderService orderService;
-    private final OrderMapper orderMapper;
 
-    public OrderController(OrderService orderService, OrderMapper orderMapper) {
+    public OrderController(OrderService orderService) {
         this.orderService = orderService;
-        this.orderMapper = orderMapper;
     }
 
     @GetMapping("/orders")
     @Transactional(readOnly = true)
     public String findAll(Model model) {
         List<Order> orders = orderService.findCompletedOrders();
-        List<OrderDto> orderDtos = orders.stream().map(orderMapper::mapTo).toList();
+        List<OrderDto> orderDtos = OrderMapper.mapTo(orders);
         model.addAttribute("orders", orderDtos);
         return "orders";
     }
@@ -32,11 +30,10 @@ public class OrderController {
     @GetMapping("/orders/{id}")
     @Transactional(readOnly = true)
     public String getById(@PathVariable("id") UUID id, Model model) {
-        Order order = orderService.getById(id);
-        OrderDto orderDto = orderMapper.mapTo(order);
-
+        Order order = orderService.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+        OrderDto orderDto = OrderMapper.mapTo(order);
         model.addAttribute("order", orderDto);
-
         return "order";
     }
 }
