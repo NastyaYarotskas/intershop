@@ -30,7 +30,7 @@ public class OrderController {
 
     @GetMapping("/orders/{id}")
     @Transactional(readOnly = true)
-    public String getById(@PathVariable("id") UUID id, Model model) {
+    public String findOrderById(@PathVariable("id") UUID id, Model model) {
         Order order = orderService.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(id));
         OrderDto orderDto = OrderMapper.mapTo(order);

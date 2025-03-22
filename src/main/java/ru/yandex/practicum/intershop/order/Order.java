@@ -1,7 +1,9 @@
 package ru.yandex.practicum.intershop.order;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import ru.yandex.practicum.intershop.orderitem.OrderItem;
 
 import java.util.ArrayList;
@@ -11,6 +13,8 @@ import java.util.UUID;
 @Data
 @Entity
 @Table(name = "orders")
+@AllArgsConstructor
+@NoArgsConstructor
 public class Order {
 
     @Id
