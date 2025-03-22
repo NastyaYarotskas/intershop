@@ -1,11 +1,11 @@
 package ru.yandex.practicum.intershop.item;
 
-import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -36,8 +36,7 @@ public class ItemService {
         return itemRepository.findByTitleContainingIgnoreCase(request.getSearch(), pageRequest);
     }
 
-    @Transactional
-    public Item getById(UUID id) {
-        return itemRepository.findById(id).get();
+    public Optional<Item> findById(UUID id) {
+        return itemRepository.findById(id);
     }
 }

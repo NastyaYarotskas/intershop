@@ -17,12 +17,8 @@ public class Item {
     private String description;
 
     @Lob
-    @Basic(fetch = FetchType.EAGER)
+    @Basic(fetch = FetchType.LAZY)
     private String img;
 
     private int price;
-
-    public int getCount() {
-        return 0;
-    }
 }

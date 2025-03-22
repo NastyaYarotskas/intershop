@@ -1,6 +1,5 @@
 package ru.yandex.practicum.intershop.orderitem;
 
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.intershop.item.Item;
 import ru.yandex.practicum.intershop.order.Order;
@@ -14,12 +13,37 @@ public class OrderItemService {
         this.orderItemRepository = orderItemRepository;
     }
 
-    @Transactional
-    public OrderItem createNewOrderItem(Order order, Item item) {
-        OrderItem orderItem = new OrderItem();
-//        orderItem.setId(new OrderItemId(order.getId(), item.getId()));
-        orderItem.setOrder(order);
-        orderItem.setItem(item);
-        return orderItemRepository.save(orderItem);
+    private OrderItem findOrderItemOrCreateNew(Order order, Item item) {
+        OrderItemId orderItemId = new OrderItemId(order.getId(), item.getId());
+        return orderItemRepository.findById(orderItemId)
+                .orElseGet(() -> {
+                    OrderItem newOrderItem = new OrderItem();
+                    newOrderItem.setId(orderItemId);
+                    newOrderItem.setOrder(order);
+                    newOrderItem.setItem(item);
+                    newOrderItem.setCount(0);
+                    return orderItemRepository.save(newOrderItem);
+                });
+    }
+
+    public void addItemToOrder(Order order, Item item) {
+        OrderItem orderItem = findOrderItemOrCreateNew(order, item);
+        orderItem.setCount(orderItem.getCount() + 1);
+        orderItemRepository.save(orderItem);
+    }
+
+    public void minusItemFromOrder(Order order, Item item) {
+        OrderItem orderItem = findOrderItemOrCreateNew(order, item);
+        orderItem.setCount(Math.max(orderItem.getCount() - 1, 0));
+        if (orderItem.getCount() == 0) {
+            orderItemRepository.delete(orderItem);
+        } else {
+            orderItemRepository.save(orderItem);
+        }
+    }
+
+    public void deleteItemFromOrder(Order order, Item item) {
+        OrderItem orderItem = findOrderItemOrCreateNew(order, item);
+        orderItemRepository.delete(orderItem);
     }
 }
