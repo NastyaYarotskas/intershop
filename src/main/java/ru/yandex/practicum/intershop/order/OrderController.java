@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import ru.yandex.practicum.intershop.error.EntityNotFoundException;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,7 +32,7 @@ public class OrderController {
     @Transactional(readOnly = true)
     public String getById(@PathVariable("id") UUID id, Model model) {
         Order order = orderService.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new EntityNotFoundException(id));
         OrderDto orderDto = OrderMapper.mapTo(order);
         model.addAttribute("order", orderDto);
         return "order";
