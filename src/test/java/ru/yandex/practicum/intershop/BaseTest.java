@@ -19,8 +19,8 @@ public class BaseTest {
         int localPort = 5430;
         postgres = new PostgreSQLContainer<>("postgres:latest")
                 .withDatabaseName("intershop_db")
-                .withUsername("test")
-                .withPassword("test")
+                .withUsername("sa")
+                .withPassword("sa")
                 .withExposedPorts(containerPort)
                 .withCreateContainerCmdModifier(cmd -> cmd.withHostConfig(
                         new HostConfig().withPortBindings(new PortBinding(Ports.Binding.bindPort(localPort), new ExposedPort(containerPort)))
