@@ -19,14 +19,11 @@ import java.util.UUID;
 public class CartController {
 
     private final OrderService orderService;
-    private final OrderMapper orderMapper;
     private final CartService cartService;
 
     public CartController(OrderService orderService,
-                          OrderMapper orderMapper,
                           CartService cartService) {
         this.orderService = orderService;
-        this.orderMapper = orderMapper;
         this.cartService = cartService;
     }
 
@@ -35,7 +32,7 @@ public class CartController {
     public String getCart(Model model) {
         Optional<Order> activeOrder = orderService.findActiveOrder();
         OrderDto orderDto = activeOrder
-                .map(orderMapper::mapTo)
+                .map(OrderMapper::mapTo)
                 .orElse(new OrderDto());
         model.addAttribute("order", orderDto);
         return "cart";
