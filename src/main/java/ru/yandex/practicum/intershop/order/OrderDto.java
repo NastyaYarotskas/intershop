@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.yandex.practicum.intershop.orderitem.OrderItemDto;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,7 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class OrderDto {
     private UUID id;
-    private List<OrderItemDto> items;
+    private List<OrderItemDto> items = new ArrayList<>();
 
     public int getTotalSum() {
         return items.stream()

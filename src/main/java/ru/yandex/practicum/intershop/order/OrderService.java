@@ -26,15 +26,25 @@ public class OrderService {
         return orderRepository.findById(id).get();
     }
 
-//    @Transactional
     public Optional<Order> findActiveOrder() {
         return orderRepository.findFirstByIsNewTrue();
     }
 
-//    @Transactional
-    public Order createNewOrder() {
-        Order order = new Order();
-        order.setNew(true);
-        return orderRepository.save(order);
+    public Order findActiveOrderOrCreateNew() {
+        return orderRepository.findByIsNewTrue()
+                .orElseGet(() -> {
+                    Order newOrder = new Order();
+                    newOrder.setNew(true);
+                    return orderRepository.save(newOrder);
+                });
+    }
+
+    public void completeOrder() {
+        Optional<Order> newOrder = orderRepository.findByIsNewTrue();
+        if (newOrder.isPresent()) {
+            Order order = newOrder.get();
+            order.setNew(false);
+            orderRepository.save(order);
+        }
     }
 }
