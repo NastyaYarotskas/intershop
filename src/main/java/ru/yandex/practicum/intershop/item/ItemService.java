@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -17,6 +18,7 @@ public class ItemService {
         this.itemRepository = itemRepository;
     }
 
+    @Transactional
     public Page<Item> findAll(GetItemsRequest request) {
         Sort sort = switch (request.getSort()) {
             case NO -> Sort.by(Sort.Direction.DESC,"title");
