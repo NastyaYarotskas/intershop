@@ -16,7 +16,7 @@ public class BaseTest {
 
     static {
         int containerPort = 5432;
-        int localPort = 6432;
+        int localPort = 5430;
         postgres = new PostgreSQLContainer<>("postgres:latest")
                 .withDatabaseName("intershop_db")
                 .withUsername("test")
