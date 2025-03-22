@@ -7,6 +7,15 @@ import java.util.List;
 @UtilityClass
 public class ItemMapper {
 
+    public static Item mapFrom(CreateItemRequest request) {
+        return new Item(
+                request.getTitle(),
+                request.getDescription(),
+                request.getBase64Img(),
+                request.getPrice()
+        );
+    }
+
     public static ItemDto mapTo(Item item) {
         return new ItemDto(
                 item.getId(),

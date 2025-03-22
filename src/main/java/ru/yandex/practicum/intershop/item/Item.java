@@ -25,4 +25,11 @@ public class Item {
     private String img;
 
     private int price;
+
+    public Item(String title, String description, String img, int price) {
+        this.title = title;
+        this.description = description;
+        this.img = img;
+        this.price = price;
+    }
 }
