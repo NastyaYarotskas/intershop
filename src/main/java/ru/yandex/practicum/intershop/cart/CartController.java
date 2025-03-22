@@ -49,6 +49,18 @@ public class CartController {
         return "cart";
     }
 
+    @PostMapping("/buy")
+    @Transactional
+    public String buy(Model model) {
+        Optional<Order> newOrder = orderRepository.findByIsNewTrue();
+        if (newOrder.isPresent()) {
+            Order order = newOrder.get();
+            order.setNew(false);
+            orderRepository.save(order);
+        }
+        return "redirect:/";
+    }
+
     @PostMapping("/cart/items/{id}")
     @Transactional
     public String getById(@PathVariable("id") UUID itemId, @PathParam("action") String action, Model model) {
