@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @AutoConfigureMockMvc
@@ -66,5 +67,16 @@ public class ItemControllerTest extends BaseTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("error"))
                 .andExpect(model().attributeExists("errorMessage"));
+    }
+
+    @Test
+    void save_allParamsAreSet_shouldCreateItemAndRedirectToTheMainPage() throws Exception {
+        mockMvc.perform(multipart("/items")
+                        .file("img", "img".getBytes())
+                        .param("title", "title")
+                        .param("description", "description")
+                        .param("price", "123"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/"));
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import ru.yandex.practicum.intershop.error.EntityNotFoundException;
 import ru.yandex.practicum.intershop.order.Order;
 import ru.yandex.practicum.intershop.order.OrderService;
@@ -82,5 +83,12 @@ public class ItemController {
         model.addAttribute("item", itemDto);
 
         return "item";
+    }
+
+    @PostMapping("/items")
+    @Transactional
+    public String save(@ModelAttribute CreateItemRequest request) {
+        itemService.save(ItemMapper.mapFrom(request));
+        return "redirect:/";
     }
 }

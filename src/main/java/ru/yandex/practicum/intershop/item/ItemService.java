@@ -41,4 +41,8 @@ public class ItemService {
     public Optional<Item> findById(UUID id) {
         return itemRepository.findById(id);
     }
+
+    public void save(Item item) {
+       itemRepository.save(item);
+    }
 }
