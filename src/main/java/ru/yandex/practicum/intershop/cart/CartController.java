@@ -48,8 +48,20 @@ public class CartController {
     }
 
     @PostMapping("/cart/items/{id}")
-    public String modifyItemInCart(@PathVariable("id") UUID itemId, @PathParam("action") String action) {
+    public String modifyItemInCartFromCart(@PathVariable("id") UUID itemId, @PathParam("action") String action) {
         cartService.modifyItemInCart(itemId, action);
         return "redirect:/cart/items";
+    }
+
+    @PostMapping("/items/{id}")
+    public String modifyItemInCartFromItem(@PathVariable("id") UUID itemId, @PathParam("action") String action) {
+        cartService.modifyItemInCart(itemId, action);
+        return "redirect:/items/" + itemId;
+    }
+
+    @PostMapping("/main/items/{id}")
+    public String modifyItemInCartFromMain(@PathVariable("id") UUID itemId, @PathParam("action") String action) {
+        cartService.modifyItemInCart(itemId, action);
+        return "redirect:/";
     }
 }
