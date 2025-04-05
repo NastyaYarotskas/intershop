@@ -1,14 +1,14 @@
 package ru.yandex.practicum.intershop.orderitem;
 
-import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Immutable;
 
 import java.io.Serializable;
 import java.util.UUID;
 
-@Embeddable
+@Immutable
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

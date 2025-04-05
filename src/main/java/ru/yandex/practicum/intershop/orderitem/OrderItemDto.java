@@ -2,10 +2,12 @@ package ru.yandex.practicum.intershop.orderitem;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class OrderItemDto {
     private UUID id;

@@ -1,8 +1,7 @@
 package ru.yandex.practicum.intershop.cart;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PathVariable;
+import reactor.core.publisher.Mono;
 import ru.yandex.practicum.intershop.item.Item;
 import ru.yandex.practicum.intershop.item.ItemService;
 import ru.yandex.practicum.intershop.order.Order;
@@ -26,18 +25,20 @@ public class CartService {
         this.orderItemService = orderItemService;
     }
 
-    @Transactional
-    public void modifyItemInCart(@PathVariable("id") UUID itemId, String action) {
-        Order order = orderService.findActiveOrderOrCreateNew();
+    public Mono<Void> modifyItemInCart(UUID itemId, String action) {
+        return orderService.findActiveOrderOrCreateNew()
+                .zipWith(itemService.findById(itemId)
+                        .switchIfEmpty(Mono.error(new RuntimeException("Item not found"))))
+                .flatMap(tuple -> {
+                    Order order = tuple.getT1();
+                    Item item = tuple.getT2();
 
-        Item item = itemService.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("Item not found"));
-
-        switch (action) {
-            case "PLUS" -> orderItemService.addItemToOrder(order, item);
-            case "MINUS" -> orderItemService.minusItemFromOrder(order, item);
-            case "DELETE" -> orderItemService.deleteItemFromOrder(order, item);
-            case null, default -> throw new IllegalArgumentException("Invalid action: " + action);
-        }
+                    return switch (action) {
+                        case "PLUS" -> orderItemService.addItemToOrder(order, item);
+                        case "MINUS" -> orderItemService.minusItemFromOrder(order, item);
+                        case "DELETE" -> orderItemService.deleteItemFromOrder(order, item);
+                        default -> Mono.error(new IllegalArgumentException("Invalid action: " + action));
+                    };
+                });
     }
 }

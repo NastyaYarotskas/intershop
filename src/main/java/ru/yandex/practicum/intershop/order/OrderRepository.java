@@ -1,18 +1,22 @@
 package ru.yandex.practicum.intershop.order;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.r2dbc.repository.Query;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface OrderRepository extends JpaRepository<Order, UUID> {
+public interface OrderRepository extends ReactiveCrudRepository<Order, UUID> {
 
-    Optional<Order> findFirstByIsNewTrue();
+    @Query("SELECT * FROM orders WHERE is_new = true LIMIT 1")
+    Mono<Order> findFirstByIsNewTrue();
 
-    Optional<Order> findByIsNewTrue();
+    @Query("SELECT * FROM orders WHERE is_new = true")
+    Mono<Order> findByIsNewTrue();
 
-    List<Order> findByIsNewFalse();
+    @Query("SELECT * FROM orders WHERE is_new = false")
+    Flux<Order> findByIsNewFalse();
 }

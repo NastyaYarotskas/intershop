@@ -1,9 +1,9 @@
 package ru.yandex.practicum.intershop.order;
 
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -15,33 +15,33 @@ public class OrderService {
         this.orderRepository = orderRepository;
     }
 
-    public List<Order> findCompletedOrders() {
+    public Flux<Order> findCompletedOrders() {
         return orderRepository.findByIsNewFalse();
     }
 
-    public Optional<Order> findById(UUID id) {
+    public Mono<Order> findById(UUID id) {
         return orderRepository.findById(id);
     }
 
-    public Optional<Order> findActiveOrder() {
+    public Mono<Order> findActiveOrder() {
         return orderRepository.findFirstByIsNewTrue();
     }
 
-    public Order findActiveOrderOrCreateNew() {
+    public Mono<Order> findActiveOrderOrCreateNew() {
         return orderRepository.findByIsNewTrue()
-                .orElseGet(() -> {
+                .switchIfEmpty(Mono.defer(() -> {
                     Order newOrder = new Order();
                     newOrder.setNew(true);
                     return orderRepository.save(newOrder);
-                });
+                }));
     }
 
-    public void completeOrder() {
-        Optional<Order> newOrder = orderRepository.findByIsNewTrue();
-        if (newOrder.isPresent()) {
-            Order order = newOrder.get();
-            order.setNew(false);
-            orderRepository.save(order);
-        }
+    public Mono<Void> completeOrder() {
+        return orderRepository.findByIsNewTrue()
+                .flatMap(order -> {
+                    order.setNew(false);
+                    return orderRepository.save(order);
+                })
+                .then();
     }
 }

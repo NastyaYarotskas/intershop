@@ -1,13 +1,16 @@
 package ru.yandex.practicum.intershop.item;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Mono;
 
-import java.util.Optional;
 import java.util.UUID;
+
+import static org.springframework.data.domain.Sort.Direction.ASC;
+import static org.springframework.data.domain.Sort.Direction.DESC;
 
 @Service
 public class ItemService {
@@ -18,31 +21,39 @@ public class ItemService {
         this.itemRepository = itemRepository;
     }
 
-    @Transactional
-    public Page<Item> findAll(GetItemsRequest request) {
+    public Mono<Page<Item>> findAll(GetItemsRequest request) {
         Sort sort = switch (request.getSort()) {
-            case NO -> Sort.by(Sort.Direction.DESC,"title");
-            case ALPHA -> Sort.by(Sort.Direction.ASC, "title");
-            case PRICE -> Sort.by(Sort.Direction.ASC, "price");
+            case NO -> new Sort(DESC.name(), "title");
+            case ALPHA -> new Sort(ASC.name(), "title");
+            case PRICE -> new Sort(ASC.name(), "price");
         };
 
         int page = request.getPageNumber() == 0 ? 1 : request.getPageNumber();
         int size = request.getPageSize() == 0 ? 10 : request.getPageSize();
 
-        PageRequest pageRequest = PageRequest.of(page - 1, size, sort);
+        Pageable pageRequest = PageRequest.of(page - 1, size);
 
         if (request.getSearch() == null || request.getSearch().isEmpty()) {
-            return itemRepository.findAll(pageRequest);
+            return itemRepository.findAllBy(pageRequest.getPageSize(), pageRequest.getOffset(), sort.property(), sort.direction())
+                    .collectList()
+                    .zipWith(itemRepository.count())
+                    .map(tuple -> new PageImpl<>(tuple.getT1(), pageRequest, tuple.getT2()));
         }
 
-        return itemRepository.findByTitleContainingIgnoreCase(request.getSearch(), pageRequest);
+        return itemRepository.findByTitleContainingIgnoreCase(request.getSearch(), pageRequest.getPageSize(), pageRequest.getOffset())
+                .collectList()
+                .zipWith(itemRepository.countByTitleContainingIgnoreCase(request.getSearch()))
+                .map(tuple -> new PageImpl<>(tuple.getT1(), pageRequest, tuple.getT2()));
     }
 
-    public Optional<Item> findById(UUID id) {
+    public Mono<Item> findById(UUID id) {
         return itemRepository.findById(id);
     }
 
-    public void save(Item item) {
-       itemRepository.save(item);
+    public Mono<Void> save(Item item) {
+        return itemRepository.save(item);
+    }
+
+    record Sort(String direction, String property) {
     }
 }
