@@ -27,7 +27,7 @@ public class OrderItemServiceTest extends BaseTest {
         );
 
         orderService.findActiveOrderOrCreateNew()
-                .flatMap(order -> orderItemService.addItemToOrder(order, item)
+                .flatMap(order -> orderItemService.addItemToOrder(order.getId(), item.getId())
                         .then(orderItemService.findOrderItemCount(order.getId(), item.getId())))
                 .doOnNext(count -> {
                     Assertions.assertThat(count)
@@ -53,8 +53,8 @@ public class OrderItemServiceTest extends BaseTest {
     void addItemToOrder_orderItemExists_shouldIncreaseItemCount() {
         ItemEntity item = new ItemEntity(UUID.fromString("550e8400-e29b-41d4-a716-446655440006"), "Электронная книга PocketBook 740", "7.8\", 32 ГБ, сенсорный экран, Wi-Fi", "", 19990);
         orderService.findActiveOrderOrCreateNew()
-                .flatMap(order -> orderItemService.addItemToOrder(order, item)
-                        .then(orderItemService.addItemToOrder(order, item))
+                .flatMap(order -> orderItemService.addItemToOrder(order.getId(), item.getId())
+                        .then(orderItemService.addItemToOrder(order.getId(), item.getId()))
                         .then(orderItemService.findOrderItemCount(order.getId(), item.getId())))
                 .doOnNext(count -> {
                     Assertions.assertThat(count)
@@ -74,9 +74,9 @@ public class OrderItemServiceTest extends BaseTest {
         );
 
         orderService.findActiveOrderOrCreateNew()
-                .flatMap(order -> orderItemService.addItemToOrder(order, item)
-                        .then(orderItemService.addItemToOrder(order, item))
-                        .then(orderItemService.minusItemFromOrder(order, item))
+                .flatMap(order -> orderItemService.addItemToOrder(order.getId(), item.getId())
+                        .then(orderItemService.addItemToOrder(order.getId(), item.getId()))
+                        .then(orderItemService.minusItemFromOrder(order.getId(), item.getId()))
                         .then(orderItemService.findOrderItemCount(order.getId(), item.getId())))
                 .doOnNext(count -> {
                     Assertions.assertThat(count)
@@ -96,8 +96,8 @@ public class OrderItemServiceTest extends BaseTest {
         );
 
         orderService.findActiveOrderOrCreateNew()
-                .flatMap(order -> orderItemService.addItemToOrder(order, item)
-                        .then(orderItemService.deleteItemFromOrder(order, item))
+                .flatMap(order -> orderItemService.addItemToOrder(order.getId(), item.getId())
+                        .then(orderItemService.deleteItemFromOrder(order.getId(), item.getId()))
                         .then(orderItemService.findOrderItemCount(order.getId(), item.getId())))
                 .doOnNext(count -> {
                     Assertions.assertThat(count)

@@ -34,9 +34,9 @@ public class CartService {
                     ItemEntity item = tuple.getT2();
 
                     return switch (action) {
-                        case "PLUS" -> orderItemService.addItemToOrder(order, item);
-                        case "MINUS" -> orderItemService.minusItemFromOrder(order, item);
-                        case "DELETE" -> orderItemService.deleteItemFromOrder(order, item);
+                        case "PLUS" -> orderItemService.addItemToOrder(order.getId(), item.getId());
+                        case "MINUS" -> orderItemService.minusItemFromOrder(order.getId(), item.getId());
+                        case "DELETE" -> orderItemService.deleteItemFromOrder(order.getId(), item.getId());
                         default -> Mono.error(new IllegalArgumentException("Invalid action: " + action));
                     };
                 });

@@ -3,8 +3,6 @@ package ru.yandex.practicum.intershop.orderitem;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import ru.yandex.practicum.intershop.item.ItemEntity;
-import ru.yandex.practicum.intershop.order.OrderEntity;
 
 import java.util.UUID;
 
@@ -17,12 +15,12 @@ public class OrderItemService {
         this.orderItemRepository = orderItemRepository;
     }
 
-    private Mono<OrderItemEntity> findOrderItemOrCreateNew(OrderEntity order, ItemEntity item) {
-        return orderItemRepository.findByOrderIdAndItemId(order.getId(), item.getId())
+    private Mono<OrderItemEntity> findOrderItemOrCreateNew(UUID orderId, UUID itemId) {
+        return orderItemRepository.findByOrderIdAndItemId(orderId, itemId)
                 .switchIfEmpty(Mono.defer(() -> {
                     OrderItemEntity newOrderItem = new OrderItemEntity();
-                    newOrderItem.setOrderId(order.getId());
-                    newOrderItem.setItemId(item.getId());
+                    newOrderItem.setOrderId(orderId);
+                    newOrderItem.setItemId(itemId);
                     newOrderItem.setCount(0);
                     return orderItemRepository.save(newOrderItem);
                 }));
@@ -38,16 +36,14 @@ public class OrderItemService {
                 .defaultIfEmpty(0);
     }
 
-    public Mono<Void> addItemToOrder(OrderEntity order, ItemEntity item) {
-        return findOrderItemOrCreateNew(order, item)
-                .flatMap(orderItem -> {
-                    orderItem.setCount(orderItem.getCount() + 1);
-                    return orderItemRepository.updateCount(orderItem.getOrderId(), orderItem.getItemId(), orderItem.getCount());
-                });
+    public Mono<Void> addItemToOrder(UUID orderId, UUID itemId) {
+        return findOrderItemOrCreateNew(orderId, itemId)
+                .flatMap(orderItem -> orderItemRepository
+                        .updateCount(orderItem.getOrderId(), orderItem.getItemId(), orderItem.getCount() + 1));
     }
 
-    public Mono<Void> minusItemFromOrder(OrderEntity order, ItemEntity item) {
-        return findOrderItemOrCreateNew(order, item)
+    public Mono<Void> minusItemFromOrder(UUID orderId, UUID itemId) {
+        return findOrderItemOrCreateNew(orderId, itemId)
                 .flatMap(orderItem -> {
                     int newCount = Math.max(orderItem.getCount() - 1, 0);
                     if (newCount == 0) {
@@ -58,8 +54,8 @@ public class OrderItemService {
                 });
     }
 
-    public Mono<Void> deleteItemFromOrder(OrderEntity order, ItemEntity item) {
-        return findOrderItemOrCreateNew(order, item)
+    public Mono<Void> deleteItemFromOrder(UUID orderId, UUID itemId) {
+        return findOrderItemOrCreateNew(orderId, itemId)
                 .flatMap(orderItem -> orderItemRepository.delete(orderItem.getOrderId(), orderItem.getItemId()));
     }
 }
