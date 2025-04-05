@@ -10,20 +10,20 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 @Repository
-public interface ItemRepository extends ReactiveCrudRepository<Item, UUID> {
+public interface ItemRepository extends ReactiveCrudRepository<ItemEntity, UUID> {
 
     @Query("""
             INSERT INTO items (price, title, description, img)
             VALUES (:#{#item.price}, :#{#item.title}, :#{#item.description}, :#{#item.img})
             """)
-    Mono<Void> save(@Param("item") Item item);
+    Mono<Void> save(@Param("item") ItemEntity item);
 
     @Query("select id, price, description, title, img from items i where id = :id")
-    Mono<Item> findById(@Param("id") UUID id);
+    Mono<ItemEntity> findById(@Param("id") UUID id);
 
     @Query("SELECT id, price, description, title, img FROM items WHERE LOWER(title) LIKE LOWER(CONCAT('%', :title, '%')) " +
            "ORDER BY title LIMIT :limit OFFSET :offset")
-    Flux<Item> findByTitleContainingIgnoreCase(@Param("title") String title, @Param("limit") int limit, @Param("offset") long offset);
+    Flux<ItemEntity> findByTitleContainingIgnoreCase(@Param("title") String title, @Param("limit") int limit, @Param("offset") long offset);
 
     @Query("SELECT COUNT(*) FROM items WHERE LOWER(title) LIKE LOWER(CONCAT('%', :title, '%'))")
     Mono<Long> countByTitleContainingIgnoreCase(@Param("title") String title);
@@ -38,7 +38,7 @@ public interface ItemRepository extends ReactiveCrudRepository<Item, UUID> {
             LIMIT :limit
             OFFSET :offset
             """)
-    Flux<Item> findAllBy(
+    Flux<ItemEntity> findAllBy(
             @Param("limit") int limit,
             @Param("offset") long offset,
             @Param("sortBy") String sortBy,

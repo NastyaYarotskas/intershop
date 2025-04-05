@@ -7,8 +7,8 @@ import java.util.List;
 @UtilityClass
 public class ItemMapper {
 
-    public static ItemDto mapTo(Item item) {
-        return new ItemDto(
+    public static Item mapTo(ItemEntity item) {
+        return new Item(
                 item.getId(),
                 item.getTitle(),
                 item.getDescription(),
@@ -18,7 +18,7 @@ public class ItemMapper {
         );
     }
 
-    public static List<ItemDto> mapTo(List<Item> items) {
+    public static List<Item> mapTo(List<ItemEntity> items) {
         return items.stream().map(ItemMapper::mapTo).toList();
     }
 }

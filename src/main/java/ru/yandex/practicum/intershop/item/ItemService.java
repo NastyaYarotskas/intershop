@@ -21,7 +21,7 @@ public class ItemService {
         this.itemRepository = itemRepository;
     }
 
-    public Mono<Page<Item>> findAll(GetItemsRequest request) {
+    public Mono<Page<ItemEntity>> findAll(GetItemsRequest request) {
         Sort sort = switch (request.getSort()) {
             case NO -> new Sort(DESC.name(), "title");
             case ALPHA -> new Sort(ASC.name(), "title");
@@ -46,11 +46,11 @@ public class ItemService {
                 .map(tuple -> new PageImpl<>(tuple.getT1(), pageRequest, tuple.getT2()));
     }
 
-    public Mono<Item> findById(UUID id) {
+    public Mono<ItemEntity> findById(UUID id) {
         return itemRepository.findById(id);
     }
 
-    public Mono<Void> save(Item item) {
+    public Mono<Void> save(ItemEntity item) {
         return itemRepository.save(item);
     }
 

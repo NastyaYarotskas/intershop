@@ -4,7 +4,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ru.yandex.practicum.intershop.BaseTest;
-import ru.yandex.practicum.intershop.item.Item;
+import ru.yandex.practicum.intershop.item.ItemEntity;
 import ru.yandex.practicum.intershop.order.OrderService;
 
 import java.util.UUID;
@@ -18,7 +18,7 @@ public class OrderItemServiceTest extends BaseTest {
 
     @Test
     void findOrderItemCount_orderItemExists_shouldReturnCorrectCountValue() {
-        Item item = new Item(
+        ItemEntity item = new ItemEntity(
                 UUID.fromString("550e8400-e29b-41d4-a716-446655440006"),
                 "Электронная книга PocketBook 740",
                 "7.8\", 32 ГБ, сенсорный экран, Wi-Fi",
@@ -51,7 +51,7 @@ public class OrderItemServiceTest extends BaseTest {
 
     @Test
     void addItemToOrder_orderItemExists_shouldIncreaseItemCount() {
-        Item item = new Item(UUID.fromString("550e8400-e29b-41d4-a716-446655440006"), "Электронная книга PocketBook 740", "7.8\", 32 ГБ, сенсорный экран, Wi-Fi", "", 19990);
+        ItemEntity item = new ItemEntity(UUID.fromString("550e8400-e29b-41d4-a716-446655440006"), "Электронная книга PocketBook 740", "7.8\", 32 ГБ, сенсорный экран, Wi-Fi", "", 19990);
         orderService.findActiveOrderOrCreateNew()
                 .flatMap(order -> orderItemService.addItemToOrder(order, item)
                         .then(orderItemService.addItemToOrder(order, item))
@@ -65,7 +65,7 @@ public class OrderItemServiceTest extends BaseTest {
 
     @Test
     void minusItemFromOrder_orderItemExists_shouldDecreaseItemCount() {
-        Item item = new Item(
+        ItemEntity item = new ItemEntity(
                 UUID.fromString("550e8400-e29b-41d4-a716-446655440006"),
                 "Электронная книга PocketBook 740",
                 "7.8\", 32 ГБ, сенсорный экран, Wi-Fi",
@@ -87,7 +87,7 @@ public class OrderItemServiceTest extends BaseTest {
 
     @Test
     void deleteItemFromOrder_orderItemExists_shouldDecreaseItemCount() {
-        Item item = new Item(
+        ItemEntity item = new ItemEntity(
                 UUID.fromString("550e8400-e29b-41d4-a716-446655440006"),
                 "Электронная книга PocketBook 740",
                 "7.8\", 32 ГБ, сенсорный экран, Wi-Fi",

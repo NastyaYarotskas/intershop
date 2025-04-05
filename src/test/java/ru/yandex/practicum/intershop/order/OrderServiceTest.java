@@ -17,7 +17,7 @@ public class OrderServiceTest extends BaseTest {
     @Test
     void findActiveOrderOrCreateNew_activeOrderNotExists_shouldCreateNewOrder() {
         orderService.findActiveOrder()
-                .defaultIfEmpty(new Order())
+                .defaultIfEmpty(new OrderEntity())
                 .flatMap(existing -> {
                     if (existing.getId() != null) {
                         return Mono.error(new AssertionError("Active order should not exist"));

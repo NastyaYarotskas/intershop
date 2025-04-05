@@ -10,9 +10,9 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.yandex.practicum.intershop.BaseTest;
-import ru.yandex.practicum.intershop.item.Item;
+import ru.yandex.practicum.intershop.item.ItemEntity;
 import ru.yandex.practicum.intershop.item.ItemService;
-import ru.yandex.practicum.intershop.orderitem.OrderItem;
+import ru.yandex.practicum.intershop.orderitem.OrderItemEntity;
 import ru.yandex.practicum.intershop.orderitem.OrderItemService;
 
 import java.util.UUID;
@@ -33,9 +33,9 @@ public class OrderControllerTest extends BaseTest {
 
     @Test
     void findAll_validRequest_shouldAddOrdersToModelAttributes() {
-        Mockito.when(orderService.findCompletedOrders()).thenReturn(Flux.just(new Order(UUID.randomUUID(), false)));
-        Mockito.when(orderItemService.findOrderItems(any())).thenReturn(Flux.just(new OrderItem()));
-        Mockito.when(itemService.findById(any())).thenReturn(Mono.just(new Item()));
+        Mockito.when(orderService.findCompletedOrders()).thenReturn(Flux.just(new OrderEntity(UUID.randomUUID(), false)));
+        Mockito.when(orderItemService.findOrderItems(any())).thenReturn(Flux.just(new OrderItemEntity()));
+        Mockito.when(itemService.findById(any())).thenReturn(Mono.just(new ItemEntity()));
 
         webTestClient.get().uri("/orders")
                 .exchange()
@@ -46,11 +46,11 @@ public class OrderControllerTest extends BaseTest {
     @Test
     void findOrderById_orderIsPresent_shouldAddFoundOrderToModelAttributes() {
         UUID orderId = UUID.fromString("550e8400-e29b-41d4-a716-446655440006");
-        Order order = new Order(orderId, true);
+        OrderEntity order = new OrderEntity(orderId, true);
 
         Mockito.when(orderService.findById(orderId)).thenReturn(Mono.just(order));
-        Mockito.when(orderItemService.findOrderItems(orderId)).thenReturn(Flux.just(new OrderItem()));
-        Mockito.when(itemService.findById(any())).thenReturn(Mono.just(new Item()));
+        Mockito.when(orderItemService.findOrderItems(orderId)).thenReturn(Flux.just(new OrderItemEntity()));
+        Mockito.when(itemService.findById(any())).thenReturn(Mono.just(new ItemEntity()));
 
         webTestClient.get().uri("/orders/" + orderId)
                 .exchange()

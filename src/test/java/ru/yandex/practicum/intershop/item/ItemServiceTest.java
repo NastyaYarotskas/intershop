@@ -27,10 +27,10 @@ public class ItemServiceTest extends BaseTest {
                             .usingRecursiveComparison()
                             .ignoringFields("img")
                             .isEqualTo(List.of(
-                                    new Item(UUID.fromString("550e8400-e29b-41d4-a716-446655440006"),
+                                    new ItemEntity(UUID.fromString("550e8400-e29b-41d4-a716-446655440006"),
                                             "Электронная книга PocketBook 740",
                                             "7.8\", 32 ГБ, сенсорный экран, Wi-Fi", "", 19990),
-                                    new Item(UUID.fromString("550e8400-e29b-41d4-a716-446655440008"),
+                                    new ItemEntity(UUID.fromString("550e8400-e29b-41d4-a716-446655440008"),
                                             "Фотоаппарат Canon EOS R6",
                                             "20 Мп, беззеркальный, 4K видео, Wi-Fi", "", 179990)
                             ));
@@ -52,10 +52,10 @@ public class ItemServiceTest extends BaseTest {
                             .usingRecursiveComparison()
                             .ignoringFields("img")
                             .isEqualTo(List.of(
-                                    new Item(UUID.fromString("550e8400-e29b-41d4-a716-446655440007"),
+                                    new ItemEntity(UUID.fromString("550e8400-e29b-41d4-a716-446655440007"),
                                             "Игровая консоль PlayStation 5",
                                             "825 ГБ SSD, 4K, Blu-ray, беспроводной геймпад", "", 79990),
-                                    new Item(UUID.fromString("550e8400-e29b-41d4-a716-446655440011"),
+                                    new ItemEntity(UUID.fromString("550e8400-e29b-41d4-a716-446655440011"),
                                             "Клавиатура Logitech G Pro X",
                                             "Механическая, RGB, программируемые клавиши", "", 12990)
                             ));
@@ -77,10 +77,10 @@ public class ItemServiceTest extends BaseTest {
                             .usingRecursiveComparison()
                             .ignoringFields("img")
                             .isEqualTo(List.of(
-                                    new Item(UUID.fromString("550e8400-e29b-41d4-a716-446655440005"),
+                                    new ItemEntity(UUID.fromString("550e8400-e29b-41d4-a716-446655440005"),
                                             "Фитнес-браслет Xiaomi Mi Band 6",
                                             "1.56\" AMOLED, мониторинг сна, пульса, SpO2", "", 3990),
-                                    new Item(UUID.fromString("550e8400-e29b-41d4-a716-446655440011"),
+                                    new ItemEntity(UUID.fromString("550e8400-e29b-41d4-a716-446655440011"),
                                             "Клавиатура Logitech G Pro X",
                                             "Механическая, RGB, программируемые клавиши", "", 12990)
                             ));
@@ -102,7 +102,7 @@ public class ItemServiceTest extends BaseTest {
                             .usingRecursiveComparison()
                             .ignoringFields("img")
                             .isEqualTo(List.of(
-                                    new Item(UUID.fromString("550e8400-e29b-41d4-a716-446655440005"),
+                                    new ItemEntity(UUID.fromString("550e8400-e29b-41d4-a716-446655440005"),
                                             "Фитнес-браслет Xiaomi Mi Band 6",
                                             "1.56\" AMOLED, мониторинг сна, пульса, SpO2", "", 3990)
                             ));

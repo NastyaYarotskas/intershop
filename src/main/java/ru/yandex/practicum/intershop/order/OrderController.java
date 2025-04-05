@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import reactor.core.publisher.Mono;
 import ru.yandex.practicum.intershop.error.EntityNotFoundException;
 import ru.yandex.practicum.intershop.item.ItemService;
-import ru.yandex.practicum.intershop.orderitem.OrderItemDto;
+import ru.yandex.practicum.intershop.orderitem.OrderItem;
 import ru.yandex.practicum.intershop.orderitem.OrderItemService;
 
 import java.util.UUID;
@@ -33,7 +33,7 @@ public class OrderController {
                                 .flatMap(orderItem ->
                                         itemService.findById(orderItem.getItemId())
                                                 .map(item -> {
-                                                    OrderItemDto dto = new OrderItemDto();
+                                                    OrderItem dto = new OrderItem();
                                                     dto.setId(item.getId());
                                                     dto.setTitle(item.getTitle());
                                                     dto.setDescription(item.getDescription());
@@ -46,7 +46,7 @@ public class OrderController {
                                 .collectList()
                                 .map(orderItemDtos -> {
                                     // Создаем DTO заказа с собранными позициями
-                                    OrderDto orderDto = new OrderDto();
+                                    Order orderDto = new Order();
                                     orderDto.setId(order.getId());
                                     // Другие поля заказа
                                     orderDto.setItems(orderItemDtos);
@@ -67,7 +67,7 @@ public class OrderController {
                                 .flatMap(orderItem ->
                                         itemService.findById(orderItem.getItemId())
                                                 .map(item -> {
-                                                    OrderItemDto dto = new OrderItemDto();
+                                                    OrderItem dto = new OrderItem();
                                                     dto.setId(item.getId());
                                                     dto.setTitle(item.getTitle());
                                                     dto.setDescription(item.getDescription());
@@ -79,7 +79,7 @@ public class OrderController {
                                 )
                                 .collectList()
                                 .map(items -> {
-                                    OrderDto dto = new OrderDto();
+                                    Order dto = new Order();
                                     dto.setId(order.getId());
                                     dto.setItems(items);
                                     model.addAttribute("order", dto);

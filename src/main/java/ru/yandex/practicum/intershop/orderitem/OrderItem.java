@@ -1,14 +1,19 @@
 package ru.yandex.practicum.intershop.orderitem;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.springframework.data.relational.core.mapping.Table;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
-@Table(name = "orders_items")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class OrderItem {
-    private UUID orderId;
-    private UUID itemId;
+    private UUID id;
+    private String title;
+    private String description;
+    private String img;
+    private int price;
     private int count;
 }

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.yandex.practicum.intershop.error.EntityNotFoundException;
-import ru.yandex.practicum.intershop.order.Order;
+import ru.yandex.practicum.intershop.order.OrderEntity;
 import ru.yandex.practicum.intershop.order.OrderService;
 import ru.yandex.practicum.intershop.orderitem.OrderItemService;
 
@@ -40,21 +40,21 @@ public class ItemController {
     public Mono<String> findItems(@ModelAttribute GetItemsRequest request, Model model) {
         return itemService.findAll(request)
                 .flatMap(page -> {
-                    List<Item> content = page.getContent();
-                    List<ItemDto> items = ItemMapper.mapTo(content);
+                    List<ItemEntity> content = page.getContent();
+                    List<Item> items = ItemMapper.mapTo(content);
 
                     return orderService.findActiveOrder()
-                            .defaultIfEmpty(new Order())
+                            .defaultIfEmpty(new OrderEntity())
                             .flatMap(order -> {
                                 // Update item counts from order
                                 return Flux.fromIterable(items)
-                                        .flatMap(itemDto -> orderItemService.findOrderItemCount(order.getId(), itemDto.getId())
-                                                .doOnNext(itemDto::setCount)
-                                                .thenReturn(itemDto))
+                                        .flatMap(item -> orderItemService.findOrderItemCount(order.getId(), item.getId())
+                                                .doOnNext(item::setCount)
+                                                .thenReturn(item))
                                         .collectList()
                                         .map(updatedItems -> {
                                             // Split into rows of 3 items
-                                            List<List<ItemDto>> itemTable = IntStream.range(0, (updatedItems.size() + 2) / 3)
+                                            List<List<Item>> itemTable = IntStream.range(0, (updatedItems.size() + 2) / 3)
                                                     .mapToObj(i -> updatedItems.subList(i * 3, Math.min((i + 1) * 3, updatedItems.size())))
                                                     .collect(Collectors.toList());
 
@@ -79,7 +79,7 @@ public class ItemController {
 
     @GetMapping("/items/{id}")
     public Mono<String> findItemById(@PathVariable("id") UUID itemId, Model model) {
-        Mono<ItemDto> findItem = itemService.findById(itemId)
+        Mono<Item> findItem = itemService.findById(itemId)
                 .switchIfEmpty(Mono.error(new EntityNotFoundException(itemId)))
                 .map(ItemMapper::mapTo);
 
@@ -88,10 +88,10 @@ public class ItemController {
 
         return Mono.zip(findItemsCount, findItem)
                 .doOnNext(tuple -> {
-                    ItemDto itemDto = tuple.getT2();
+                    Item item = tuple.getT2();
                     Integer count = tuple.getT1();
-                    itemDto.setCount(count);
-                    model.addAttribute("item", itemDto);
+                    item.setCount(count);
+                    model.addAttribute("item", item);
                 })
                 .thenReturn("item");
     }
@@ -111,7 +111,7 @@ public class ItemController {
 
                     return fileBytesMono.flatMap(bytes -> {
                         // Создаем сущность Item с байтами файла
-                        Item item = new Item();
+                        ItemEntity item = new ItemEntity();
                         item.setTitle(request.getTitle());
                         item.setDescription(request.getDescription());
                         item.setPrice(request.getPrice());

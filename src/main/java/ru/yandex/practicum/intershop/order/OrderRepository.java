@@ -9,14 +9,14 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 @Repository
-public interface OrderRepository extends ReactiveCrudRepository<Order, UUID> {
+public interface OrderRepository extends ReactiveCrudRepository<OrderEntity, UUID> {
 
     @Query("SELECT * FROM orders WHERE is_new = true LIMIT 1")
-    Mono<Order> findFirstByIsNewTrue();
+    Mono<OrderEntity> findFirstByIsNewTrue();
 
     @Query("SELECT * FROM orders WHERE is_new = true")
-    Mono<Order> findByIsNewTrue();
+    Mono<OrderEntity> findByIsNewTrue();
 
     @Query("SELECT * FROM orders WHERE is_new = false")
-    Flux<Order> findByIsNewFalse();
+    Flux<OrderEntity> findByIsNewFalse();
 }

@@ -8,9 +8,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import reactor.core.publisher.Mono;
 import ru.yandex.practicum.intershop.item.ItemService;
-import ru.yandex.practicum.intershop.order.OrderDto;
+import ru.yandex.practicum.intershop.order.Order;
 import ru.yandex.practicum.intershop.order.OrderService;
-import ru.yandex.practicum.intershop.orderitem.OrderItemDto;
 import ru.yandex.practicum.intershop.orderitem.OrderItemMapper;
 import ru.yandex.practicum.intershop.orderitem.OrderItemService;
 
@@ -43,7 +42,7 @@ public class CartController {
                                 )
                                 .collectList()
                                 .map(items -> {
-                                    OrderDto dto = new OrderDto(order.getId(), items);
+                                    Order dto = new Order(order.getId(), items);
                                     model.addAttribute("order", dto);
                                     return dto;
                                 })

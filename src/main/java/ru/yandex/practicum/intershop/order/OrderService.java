@@ -15,22 +15,22 @@ public class OrderService {
         this.orderRepository = orderRepository;
     }
 
-    public Flux<Order> findCompletedOrders() {
+    public Flux<OrderEntity> findCompletedOrders() {
         return orderRepository.findByIsNewFalse();
     }
 
-    public Mono<Order> findById(UUID id) {
+    public Mono<OrderEntity> findById(UUID id) {
         return orderRepository.findById(id);
     }
 
-    public Mono<Order> findActiveOrder() {
+    public Mono<OrderEntity> findActiveOrder() {
         return orderRepository.findFirstByIsNewTrue();
     }
 
-    public Mono<Order> findActiveOrderOrCreateNew() {
+    public Mono<OrderEntity> findActiveOrderOrCreateNew() {
         return orderRepository.findByIsNewTrue()
                 .switchIfEmpty(Mono.defer(() -> {
-                    Order newOrder = new Order();
+                    OrderEntity newOrder = new OrderEntity();
                     newOrder.setNew(true);
                     return orderRepository.save(newOrder);
                 }));
