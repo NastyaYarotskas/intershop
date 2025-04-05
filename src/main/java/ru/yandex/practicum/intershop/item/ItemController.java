@@ -14,6 +14,7 @@ import ru.yandex.practicum.intershop.order.OrderEntity;
 import ru.yandex.practicum.intershop.order.OrderService;
 import ru.yandex.practicum.intershop.orderitem.OrderItemService;
 
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
@@ -41,13 +42,23 @@ public class ItemController {
                 .flatMap(page -> {
                     List<ItemEntity> content = page.getContent();
                     List<Item> items = ItemMapper.mapTo(content);
+                    List<Item> orderedItems = new ArrayList<>(items);
 
                     return orderService.findActiveOrderId()
                             .flatMap(orderId -> Flux.fromIterable(items)
-                                    .flatMap(item -> orderItemService.findOrderItemCount(orderId, item.getId())
-                                            .doOnNext(item::setCount)
-                                            .thenReturn(item))
-                                    .collectList()
+                                    .index()
+                                    .flatMap(tuple -> {
+                                        Item item = tuple.getT2();
+                                        int originalIndex = tuple.getT1().intValue();
+
+                                        return orderItemService.findOrderItemCount(orderId, item.getId())
+                                                .doOnNext(count -> {
+                                                    item.setCount(count);
+                                                    orderedItems.set(originalIndex, item);
+                                                })
+                                                .thenReturn(item);
+                                    })
+                                    .then(Mono.just(orderedItems))
                                     .map(updatedItems -> {
                                         List<List<Item>> itemTable = IntStream.range(0, (updatedItems.size() + 2) / 3)
                                                 .mapToObj(i -> updatedItems.subList(i * 3, Math.min((i + 1) * 3, updatedItems.size())))
@@ -69,7 +80,6 @@ public class ItemController {
                                     }));
                 });
     }
-
 
     @GetMapping("/items/{id}")
     public Mono<String> findItemById(@PathVariable("id") UUID itemId, Model model) {
