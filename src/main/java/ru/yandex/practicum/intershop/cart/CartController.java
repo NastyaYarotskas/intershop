@@ -11,6 +11,7 @@ import ru.yandex.practicum.intershop.item.ItemService;
 import ru.yandex.practicum.intershop.order.OrderDto;
 import ru.yandex.practicum.intershop.order.OrderService;
 import ru.yandex.practicum.intershop.orderitem.OrderItemDto;
+import ru.yandex.practicum.intershop.orderitem.OrderItemMapper;
 import ru.yandex.practicum.intershop.orderitem.OrderItemService;
 
 import java.util.UUID;
@@ -38,22 +39,11 @@ public class CartController {
                         orderItemService.findOrderItems(order.getId())
                                 .flatMap(orderItem ->
                                         itemService.findById(orderItem.getItemId())
-                                                .map(item -> {
-                                                    OrderItemDto dto = new OrderItemDto();
-                                                    dto.setId(item.getId());
-                                                    dto.setTitle(item.getTitle());
-                                                    dto.setDescription(item.getDescription());
-                                                    dto.setImg(item.getImg());
-                                                    dto.setPrice(item.getPrice());
-                                                    dto.setCount(orderItem.getCount());
-                                                    return dto;
-                                                })
+                                                .map(item -> OrderItemMapper.mapFrom(item, orderItem.getCount()))
                                 )
                                 .collectList()
                                 .map(items -> {
-                                    OrderDto dto = new OrderDto();
-                                    dto.setId(order.getId());
-                                    dto.setItems(items);
+                                    OrderDto dto = new OrderDto(order.getId(), items);
                                     model.addAttribute("order", dto);
                                     return dto;
                                 })

@@ -96,7 +96,6 @@ public class ItemController {
                 .thenReturn("item");
     }
 
-    // todo
     @PostMapping(value = "/items", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Mono<String> save(@ModelAttribute Mono<CreateItemRequest> requestMono) {
         return requestMono
