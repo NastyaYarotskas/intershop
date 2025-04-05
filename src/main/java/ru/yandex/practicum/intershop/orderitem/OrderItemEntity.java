@@ -1,11 +1,13 @@
 package ru.yandex.practicum.intershop.orderitem;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.relational.core.mapping.Table;
 
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @Table(name = "orders_items")
 public class OrderItemEntity {
     private UUID orderId;
