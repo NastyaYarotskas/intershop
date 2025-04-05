@@ -3,78 +3,85 @@ package ru.yandex.practicum.intershop.cart;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Mono;
 import ru.yandex.practicum.intershop.BaseTest;
 import ru.yandex.practicum.intershop.order.Order;
 import ru.yandex.practicum.intershop.order.OrderService;
 
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-@AutoConfigureMockMvc
+@AutoConfigureWebTestClient
 public class CartControllerTest extends BaseTest {
 
     @MockitoBean
-    CartService cartService;
-    @MockitoBean
     OrderService orderService;
+    @MockitoBean
+    CartService cartService;
     @Autowired
-    MockMvc mockMvc;
+    WebTestClient webTestClient;
 
     @Test
-    void getCart_orderExists_shouldAddOrderAttributeToModel() throws Exception {
-        Mockito.when(orderService.findActiveOrder()).thenReturn(Optional.of(new Order()));
+    void getCart_orderExists_shouldAddOrderAttributeToModel() {
+        Mockito.when(orderService.findActiveOrderOrCreateNew()).thenReturn(Mono.just(new Order(UUID.randomUUID(), List.of())));
 
-        mockMvc.perform(get("/cart/items"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("cart"))
-                .andExpect(model().attributeExists("order"));
+        webTestClient.get().uri("/cart/items")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(MediaType.TEXT_HTML);
     }
 
     @Test
-    void buy_orderExists_shouldCompleteOrderAndRedirect() throws Exception {
-        mockMvc.perform(post("/buy"))
-                .andExpect(status().is3xxRedirection());
+    void buy_orderExists_shouldCompleteOrderAndRedirect() {
+        Mockito.when(orderService.completeOrder()).thenReturn(Mono.empty());
+
+        webTestClient.post().uri("/buy")
+                .exchange()
+                .expectStatus().is3xxRedirection();
 
         Mockito.verify(orderService, Mockito.times(1)).completeOrder();
     }
 
     @Test
-    void modifyItemInCartFromCart_paramsArePresent_shouldModifyCartAndRedirect() throws Exception {
+    void modifyItemInCartFromCart_paramsArePresent_shouldModifyCartAndRedirect() {
         UUID itemId = UUID.randomUUID();
-        mockMvc.perform(post("/cart/items/" + itemId)
-                        .queryParam("action", "PLUS")
-                )
-                .andExpect(status().is3xxRedirection());
 
-        Mockito.verify(cartService, Mockito.times(1)).modifyItemInCart(itemId, "PLUS");
+        Mockito.when(cartService.modifyItemInCart(itemId, "PLUS")).thenReturn(Mono.empty());
+
+        webTestClient.post().uri("/cart/items/" + itemId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new ItemActionRequest("PLUS"))
+                .exchange()
+                .expectStatus().is3xxRedirection();
     }
 
     @Test
-    void modifyItemInCartFromItem_paramsArePresent_shouldModifyCartAndRedirect() throws Exception {
+    void modifyItemInCartFromItem_paramsArePresent_shouldModifyCartAndRedirect() {
         UUID itemId = UUID.randomUUID();
-        mockMvc.perform(post("/items/" + itemId)
-                        .queryParam("action", "PLUS")
-                )
-                .andExpect(status().is3xxRedirection());
 
-        Mockito.verify(cartService, Mockito.times(1)).modifyItemInCart(itemId, "PLUS");
+        Mockito.when(cartService.modifyItemInCart(itemId, "PLUS")).thenReturn(Mono.empty());
+
+        webTestClient.post().uri("/items/" + itemId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new ItemActionRequest("PLUS"))
+                .exchange()
+                .expectStatus().is3xxRedirection();
     }
 
     @Test
-    void modifyItemInCartFromMain_paramsArePresent_shouldModifyCartAndRedirect() throws Exception {
+    void modifyItemInCartFromMain_paramsArePresent_shouldModifyCartAndRedirect() {
         UUID itemId = UUID.randomUUID();
-        mockMvc.perform(post("/main/items/" + itemId)
-                        .queryParam("action", "PLUS")
-                )
-                .andExpect(status().is3xxRedirection());
 
-        Mockito.verify(cartService, Mockito.times(1)).modifyItemInCart(itemId, "PLUS");
+        Mockito.when(cartService.modifyItemInCart(itemId, "PLUS")).thenReturn(Mono.empty());
+
+        webTestClient.post().uri("/main/items/" + itemId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new ItemActionRequest("PLUS"))
+                .exchange()
+                .expectStatus().is3xxRedirection();
     }
 }

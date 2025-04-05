@@ -1,18 +1,18 @@
 package ru.yandex.practicum.intershop.order;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface OrderRepository extends JpaRepository<Order, UUID> {
+public interface OrderRepository extends ReactiveCrudRepository<OrderEntity, UUID> {
 
-    Optional<Order> findFirstByIsNewTrue();
+    Mono<OrderEntity> findFirstByIsNewTrue();
 
-    Optional<Order> findByIsNewTrue();
+    Mono<OrderEntity> findByIsNewTrue();
 
-    List<Order> findByIsNewFalse();
+    Flux<OrderEntity> findByIsNewFalse();
 }

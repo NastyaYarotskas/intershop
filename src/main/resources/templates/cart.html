@@ -2,6 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
+    <meta charset="UTF-8"></meta>
     <title>Корзина товаров</title>
 </head>
 
@@ -32,11 +33,11 @@
                 <tr><td th:text="${item.getDescription()}"></td></tr>
                 <tr>
                     <td>
-                        <form th:action="${'/cart/items/'+item.getId()}" method="post">
-                            <button name="action" value="MINUS">-</button>
+                        <form th:attr="data-item-id=${item.getId()}" id="item-form" onsubmit="return false;">
+                            <button type="button" onclick="updateItem(this, 'MINUS')">-</button>
                             <span th:text="${item.getCount()}"></span>
-                            <button name="action" value="PLUS">+</button>
-                            <button name="action" value="DELETE" style="float:right;">&cross;</button>
+                            <button type="button" onclick="updateItem(this, 'PLUS')">+</button>
+                            <button type="button" onclick="updateItem(this, 'DELETE')" style="float:right;">&cross;</button>
                         </form>
                     </td>
                 </tr>
@@ -56,6 +57,36 @@
         </td>
     </tr>
 </table>
+
+<script>
+    document.getElementById('add-item-btn').addEventListener('click', function() {
+        document.getElementById('add-item-form').style.display = 'block';
+    });
+
+    function updateItem(buttonElement, action) {
+    const form = buttonElement.closest('form');
+    const itemId = form.getAttribute('data-item-id');
+
+    fetch(`/cart/items/${itemId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: action })
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url; // если сервер вернул redirect
+        } else if (response.ok) {
+            window.location.reload(); // обновить страницу после успешного изменения
+        } else {
+            console.error('Ошибка:', response.status);
+        }
+    })
+    .catch(error => console.error('Ошибка сети:', error));
+}
+</script>
+
 </body>
 
 </html>

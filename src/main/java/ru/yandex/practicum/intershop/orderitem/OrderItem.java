@@ -1,27 +1,17 @@
 package ru.yandex.practicum.intershop.orderitem;
 
-import jakarta.persistence.*;
-import lombok.Data;
-import ru.yandex.practicum.intershop.item.Item;
-import ru.yandex.practicum.intershop.order.Order;
+import lombok.Getter;
+import lombok.Setter;
 
-@Entity
-@Table(name = "orders_items")
-@Data
+import java.util.UUID;
+
+@Getter
+@Setter
 public class OrderItem {
-
-    @EmbeddedId
-    private OrderItemId id;
-
-    @ManyToOne
-    @MapsId("orderId")
-    @JoinColumn(name = "order_id", referencedColumnName = "id")
-    private Order order;
-
-    @ManyToOne
-    @MapsId("itemId")
-    @JoinColumn(name = "item_id", referencedColumnName = "id")
-    private Item item;
-
+    private UUID id;
+    private String title;
+    private String description;
+    private String img;
+    private int price;
     private int count;
 }

@@ -1,12 +1,12 @@
 # Internet-shop
 
-Веб-приложение «Витрина интернет-магазина» с использованием Spring Boot
+Веб-приложение «Витрина интернет-магазина» с использованием Spring WebFlux
 
 ### Как запускать локально
 
 1. Выполнить команду, чтобы поднять postgresql базу в докере:
     ```bush 
-        docker compose --file docker-compose.local.yml up --build
+        docker compose up postgres --build
     ```
 2. Перейти в `App.class` и запустить его
 3. Перейти по ссылке `http://localhost:8081/`

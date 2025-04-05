@@ -1,28 +1,26 @@
 package ru.yandex.practicum.intershop.order;
 
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import ru.yandex.practicum.intershop.orderitem.OrderItem;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Data
-@Entity
-@Table(name = "orders")
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class Order {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-
-    private boolean isNew;
-
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
+
+    public int getTotalSum() {
+        return items.stream()
+                .map(oi -> oi.getPrice() * oi.getCount())
+                .reduce(0, Integer::sum);
+    }
 }

@@ -1,18 +1,14 @@
 package ru.yandex.practicum.intershop.cart;
 
-import jakarta.websocket.server.PathParam;
 import org.springframework.stereotype.Controller;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import ru.yandex.practicum.intershop.order.Order;
-import ru.yandex.practicum.intershop.order.OrderDto;
-import ru.yandex.practicum.intershop.order.OrderMapper;
+import org.springframework.web.bind.annotation.RequestBody;
+import reactor.core.publisher.Mono;
 import ru.yandex.practicum.intershop.order.OrderService;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Controller
@@ -28,37 +24,33 @@ public class CartController {
     }
 
     @GetMapping("/cart/items")
-    @Transactional(readOnly = true)
-    public String getCart(Model model) {
-        Optional<Order> activeOrder = orderService.findActiveOrder();
-        OrderDto orderDto = activeOrder
-                .map(OrderMapper::mapTo)
-                .orElse(new OrderDto());
-        model.addAttribute("order", orderDto);
-        return "cart";
+    public Mono<String> getCart(Model model) {
+        return orderService.findActiveOrderOrCreateNew()
+                .doOnSuccess(order -> model.addAttribute("order", order))
+                .thenReturn("cart");
     }
 
     @PostMapping("/buy")
-    public String buy() {
-        orderService.completeOrder();
-        return "redirect:/";
+    public Mono<String> buy() {
+        return orderService.completeOrder()
+                .thenReturn("redirect:/");
     }
 
     @PostMapping("/cart/items/{id}")
-    public String modifyItemInCartFromCart(@PathVariable("id") UUID itemId, @PathParam("action") String action) {
-        cartService.modifyItemInCart(itemId, action);
-        return "redirect:/cart/items";
+    public Mono<String> modifyItemInCartFromCart(@PathVariable("id") UUID itemId, @RequestBody ItemActionRequest request) {
+        return cartService.modifyItemInCart(itemId, request.getAction())
+                .thenReturn("redirect:/cart/items");
     }
 
     @PostMapping("/items/{id}")
-    public String modifyItemInCartFromItem(@PathVariable("id") UUID itemId, @PathParam("action") String action) {
-        cartService.modifyItemInCart(itemId, action);
-        return "redirect:/items/" + itemId;
+    public Mono<String> modifyItemInCartFromItem(@PathVariable("id") UUID itemId, @RequestBody ItemActionRequest request) {
+        return cartService.modifyItemInCart(itemId, request.getAction())
+                .thenReturn("redirect:/items/" + itemId);
     }
 
-    @PostMapping("/main/items/{id}")
-    public String modifyItemInCartFromMain(@PathVariable("id") UUID itemId, @PathParam("action") String action) {
-        cartService.modifyItemInCart(itemId, action);
-        return "redirect:/";
+    @PostMapping(value = "/main/items/{id}")
+    public Mono<String> modifyItemInCartFromMain(@PathVariable("id") UUID itemId, @RequestBody ItemActionRequest request) {
+        return cartService.modifyItemInCart(itemId, request.getAction())
+                .thenReturn("redirect:/");
     }
 }

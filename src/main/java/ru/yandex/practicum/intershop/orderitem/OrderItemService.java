@@ -1,10 +1,10 @@
 package ru.yandex.practicum.intershop.orderitem;
 
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.intershop.item.Item;
-import ru.yandex.practicum.intershop.order.Order;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class OrderItemService {
@@ -15,42 +15,47 @@ public class OrderItemService {
         this.orderItemRepository = orderItemRepository;
     }
 
-    private OrderItem findOrderItemOrCreateNew(Order order, Item item) {
-        OrderItemId orderItemId = new OrderItemId(order.getId(), item.getId());
-        return orderItemRepository.findById(orderItemId)
-                .orElseGet(() -> {
-                    OrderItem newOrderItem = new OrderItem();
-                    newOrderItem.setId(orderItemId);
-                    newOrderItem.setOrder(order);
-                    newOrderItem.setItem(item);
+    private Mono<OrderItemEntity> findOrderItemOrCreateNew(UUID orderId, UUID itemId) {
+        return orderItemRepository.findByOrderIdAndItemId(orderId, itemId)
+                .switchIfEmpty(Mono.defer(() -> {
+                    OrderItemEntity newOrderItem = new OrderItemEntity();
+                    newOrderItem.setOrderId(orderId);
+                    newOrderItem.setItemId(itemId);
                     newOrderItem.setCount(0);
                     return orderItemRepository.save(newOrderItem);
+                }));
+    }
+
+    public Flux<OrderItemEntity> findOrderItems(UUID orderId) {
+        return orderItemRepository.findByOrderId(orderId);
+    }
+
+    public Mono<Integer> findOrderItemCount(UUID orderID, UUID itemId) {
+        return orderItemRepository.findByOrderIdAndItemId(orderID, itemId)
+                .map(OrderItemEntity::getCount)
+                .defaultIfEmpty(0);
+    }
+
+    public Mono<Void> addItemToOrder(UUID orderId, UUID itemId) {
+        return findOrderItemOrCreateNew(orderId, itemId)
+                .flatMap(orderItem -> orderItemRepository
+                        .updateCount(orderItem.getOrderId(), orderItem.getItemId(), orderItem.getCount() + 1));
+    }
+
+    public Mono<Void> minusItemFromOrder(UUID orderId, UUID itemId) {
+        return findOrderItemOrCreateNew(orderId, itemId)
+                .flatMap(orderItem -> {
+                    int newCount = Math.max(orderItem.getCount() - 1, 0);
+                    if (newCount == 0) {
+                        return orderItemRepository.delete(orderItem.getOrderId(), orderItem.getItemId());
+                    } else {
+                        return orderItemRepository.updateCount(orderItem.getOrderId(), orderItem.getItemId(), newCount);
+                    }
                 });
     }
 
-    public Optional<OrderItem> findOrderItem(Order order, Item item) {
-        OrderItemId orderItemId = new OrderItemId(order.getId(), item.getId());
-        return orderItemRepository.findById(orderItemId);
-    }
-
-    public void addItemToOrder(Order order, Item item) {
-        OrderItem orderItem = findOrderItemOrCreateNew(order, item);
-        orderItem.setCount(orderItem.getCount() + 1);
-        orderItemRepository.save(orderItem);
-    }
-
-    public void minusItemFromOrder(Order order, Item item) {
-        OrderItem orderItem = findOrderItemOrCreateNew(order, item);
-        orderItem.setCount(Math.max(orderItem.getCount() - 1, 0));
-        if (orderItem.getCount() == 0) {
-            orderItemRepository.delete(orderItem);
-        } else {
-            orderItemRepository.save(orderItem);
-        }
-    }
-
-    public void deleteItemFromOrder(Order order, Item item) {
-        OrderItem orderItem = findOrderItemOrCreateNew(order, item);
-        orderItemRepository.delete(orderItem);
+    public Mono<Void> deleteItemFromOrder(UUID orderId, UUID itemId) {
+        return findOrderItemOrCreateNew(orderId, itemId)
+                .flatMap(orderItem -> orderItemRepository.delete(orderItem.getOrderId(), orderItem.getItemId()));
     }
 }
