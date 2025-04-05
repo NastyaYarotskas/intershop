@@ -26,20 +26,12 @@ public class CartServiceTest extends BaseTest {
     @Test
     void modifyItemInCart_addItem_shouldCreateNewOrderAndAddOneItem() {
         cartService.modifyItemInCart(ITEM_ID, "PLUS")
-                .doOnNext(ignored -> {
-                    orderService.findActiveOrder()
-                            .map(activeOrder -> {
-                                assertNotNull(activeOrder);
-                                return activeOrder;
-                            })
-                            .doOnNext(order -> {
-                                orderItemService.findOrderItemCount(order.getId(), ITEM_ID)
-                                        .map(count -> {
-                                            assertEquals(1, count);
-                                            return count;
-                                        });
-                            });
-                })
+                .doOnNext(ignored -> orderService.findActiveOrderId()
+                        .doOnNext(orderId -> orderItemService.findOrderItemCount(orderId, ITEM_ID)
+                                .map(count -> {
+                                    assertEquals(1, count);
+                                    return count;
+                                })))
                 .block();
     }
 

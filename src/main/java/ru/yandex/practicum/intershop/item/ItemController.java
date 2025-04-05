@@ -1,6 +1,5 @@
 package ru.yandex.practicum.intershop.item;
 
-import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -43,36 +42,31 @@ public class ItemController {
                     List<ItemEntity> content = page.getContent();
                     List<Item> items = ItemMapper.mapTo(content);
 
-                    return orderService.findActiveOrder()
-                            .defaultIfEmpty(new OrderEntity())
-                            .flatMap(order -> {
-                                // Update item counts from order
-                                return Flux.fromIterable(items)
-                                        .flatMap(item -> orderItemService.findOrderItemCount(order.getId(), item.getId())
-                                                .doOnNext(item::setCount)
-                                                .thenReturn(item))
-                                        .collectList()
-                                        .map(updatedItems -> {
-                                            // Split into rows of 3 items
-                                            List<List<Item>> itemTable = IntStream.range(0, (updatedItems.size() + 2) / 3)
-                                                    .mapToObj(i -> updatedItems.subList(i * 3, Math.min((i + 1) * 3, updatedItems.size())))
-                                                    .collect(Collectors.toList());
+                    return orderService.findActiveOrderId()
+                            .flatMap(orderId -> Flux.fromIterable(items)
+                                    .flatMap(item -> orderItemService.findOrderItemCount(orderId, item.getId())
+                                            .doOnNext(item::setCount)
+                                            .thenReturn(item))
+                                    .collectList()
+                                    .map(updatedItems -> {
+                                        List<List<Item>> itemTable = IntStream.range(0, (updatedItems.size() + 2) / 3)
+                                                .mapToObj(i -> updatedItems.subList(i * 3, Math.min((i + 1) * 3, updatedItems.size())))
+                                                .collect(Collectors.toList());
 
-                                            model.addAttribute("items", itemTable);
+                                        model.addAttribute("items", itemTable);
 
-                                            int pageNumber = request.getPageNumber() == 0 ? 1 : request.getPageNumber();
-                                            int pageSize = request.getPageSize() == 0 ? 10 : request.getPageSize();
+                                        int pageNumber = request.getPageNumber() == 0 ? 1 : request.getPageNumber();
+                                        int pageSize = request.getPageSize() == 0 ? 10 : request.getPageSize();
 
-                                            model.addAttribute("paging", new Paging(
-                                                    pageNumber,
-                                                    pageSize,
-                                                    page.hasNext(),
-                                                    page.hasPrevious()
-                                            ));
+                                        model.addAttribute("paging", new Paging(
+                                                pageNumber,
+                                                pageSize,
+                                                page.hasNext(),
+                                                page.hasPrevious()
+                                        ));
 
-                                            return "main";
-                                        });
-                            });
+                                        return "main";
+                                    }));
                 });
     }
 
@@ -100,23 +94,11 @@ public class ItemController {
     public Mono<String> save(@ModelAttribute Mono<CreateItemRequest> requestMono) {
         return requestMono
                 .flatMap(request -> {
-                    // Конвертируем файл в массив байтов реактивно
-                    Mono<byte[]> fileBytesMono = DataBufferUtils.join(request.getImg().content())
-                            .map(dataBuffer -> {
-                                byte[] bytes = new byte[dataBuffer.readableByteCount()];
-                                dataBuffer.read(bytes);
-                                DataBufferUtils.release(dataBuffer);
-                                return bytes;
-                            });
+                    Mono<byte[]> fileBytesMono = request.getImgAsBytes();
 
                     return fileBytesMono.flatMap(bytes -> {
-                        // Создаем сущность Item с байтами файла
-                        ItemEntity item = new ItemEntity();
-                        item.setTitle(request.getTitle());
-                        item.setDescription(request.getDescription());
-                        item.setPrice(request.getPrice());
-                        String base64Image = Base64.getEncoder().encodeToString(bytes);
-                        item.setImg(base64Image); // Предполагается, что у Item есть поле byte[] imageBytes
+                        ItemEntity item = new ItemEntity(request.getTitle(), request.getDescription(),
+                                Base64.getEncoder().encodeToString(bytes), request.getPrice());
 
                         return itemService.save(item)
                                 .thenReturn("redirect:/");

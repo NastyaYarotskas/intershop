@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import ru.yandex.practicum.intershop.item.ItemEntity;
 import ru.yandex.practicum.intershop.item.ItemService;
-import ru.yandex.practicum.intershop.order.OrderEntity;
+import ru.yandex.practicum.intershop.order.Order;
 import ru.yandex.practicum.intershop.order.OrderService;
 import ru.yandex.practicum.intershop.orderitem.OrderItemService;
 
@@ -30,7 +30,7 @@ public class CartService {
                 .zipWith(itemService.findById(itemId)
                         .switchIfEmpty(Mono.error(new RuntimeException("Item not found"))))
                 .flatMap(tuple -> {
-                    OrderEntity order = tuple.getT1();
+                    Order order = tuple.getT1();
                     ItemEntity item = tuple.getT2();
 
                     return switch (action) {

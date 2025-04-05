@@ -7,19 +7,13 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.yandex.practicum.intershop.BaseTest;
-import ru.yandex.practicum.intershop.item.ItemEntity;
-import ru.yandex.practicum.intershop.item.ItemService;
-import ru.yandex.practicum.intershop.order.OrderEntity;
+import ru.yandex.practicum.intershop.order.Order;
 import ru.yandex.practicum.intershop.order.OrderService;
-import ru.yandex.practicum.intershop.orderitem.OrderItemEntity;
-import ru.yandex.practicum.intershop.orderitem.OrderItemService;
 
+import java.util.List;
 import java.util.UUID;
-
-import static org.mockito.ArgumentMatchers.any;
 
 @AutoConfigureWebTestClient
 public class CartControllerTest extends BaseTest {
@@ -27,19 +21,13 @@ public class CartControllerTest extends BaseTest {
     @MockitoBean
     OrderService orderService;
     @MockitoBean
-    OrderItemService orderItemService;
-    @MockitoBean
-    ItemService itemService;
-    @MockitoBean
     CartService cartService;
     @Autowired
     WebTestClient webTestClient;
 
     @Test
     void getCart_orderExists_shouldAddOrderAttributeToModel() {
-        Mockito.when(orderService.findActiveOrderOrCreateNew()).thenReturn(Mono.just(new OrderEntity(UUID.randomUUID(), true)));
-        Mockito.when(orderItemService.findOrderItems(any())).thenReturn(Flux.just(new OrderItemEntity()));
-        Mockito.when(itemService.findById(any())).thenReturn(Mono.just(new ItemEntity()));
+        Mockito.when(orderService.findActiveOrderOrCreateNew()).thenReturn(Mono.just(new Order(UUID.randomUUID(), List.of())));
 
         webTestClient.get().uri("/cart/items")
                 .exchange()

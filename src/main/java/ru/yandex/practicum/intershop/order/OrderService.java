@@ -44,13 +44,27 @@ public class OrderService {
         return orderRepository.findFirstByIsNewTrue();
     }
 
-    public Mono<OrderEntity> findActiveOrderOrCreateNew() {
+    public Mono<UUID> findActiveOrderId() {
+        return orderRepository.findFirstByIsNewTrue()
+                .defaultIfEmpty(new OrderEntity(UUID.randomUUID(), true))
+                .flatMap(orderEntity -> Mono.just(orderEntity.getId()));
+    }
+
+    public Mono<Order> findActiveOrderOrCreateNew() {
         return orderRepository.findByIsNewTrue()
                 .switchIfEmpty(Mono.defer(() -> {
                     OrderEntity newOrder = new OrderEntity();
                     newOrder.setNew(true);
                     return orderRepository.save(newOrder);
-                }));
+                }))
+                .flatMap(order -> orderItemService.findOrderItems(order.getId())
+                        .flatMap(orderItem ->
+                                itemService.findById(orderItem.getItemId())
+                                        .map(item -> OrderItemMapper.mapFrom(item, orderItem.getCount()))
+                        )
+                        .collectList()
+                        .map(items -> new Order(order.getId(), items))
+                );
     }
 
     public Mono<Void> completeOrder() {

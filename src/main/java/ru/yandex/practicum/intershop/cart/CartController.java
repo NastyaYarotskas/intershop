@@ -7,11 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import reactor.core.publisher.Mono;
-import ru.yandex.practicum.intershop.item.ItemService;
-import ru.yandex.practicum.intershop.order.Order;
 import ru.yandex.practicum.intershop.order.OrderService;
-import ru.yandex.practicum.intershop.orderitem.OrderItemMapper;
-import ru.yandex.practicum.intershop.orderitem.OrderItemService;
 
 import java.util.UUID;
 
@@ -20,33 +16,17 @@ public class CartController {
 
     private final OrderService orderService;
     private final CartService cartService;
-    private final OrderItemService orderItemService;
-    private final ItemService itemService;
 
     public CartController(OrderService orderService,
-                          CartService cartService, OrderItemService orderItemService, ItemService itemService) {
+                          CartService cartService) {
         this.orderService = orderService;
         this.cartService = cartService;
-        this.orderItemService = orderItemService;
-        this.itemService = itemService;
     }
 
     @GetMapping("/cart/items")
     public Mono<String> getCart(Model model) {
         return orderService.findActiveOrderOrCreateNew()
-                .flatMap(order ->
-                        orderItemService.findOrderItems(order.getId())
-                                .flatMap(orderItem ->
-                                        itemService.findById(orderItem.getItemId())
-                                                .map(item -> OrderItemMapper.mapFrom(item, orderItem.getCount()))
-                                )
-                                .collectList()
-                                .map(items -> {
-                                    Order dto = new Order(order.getId(), items);
-                                    model.addAttribute("order", dto);
-                                    return dto;
-                                })
-                )
+                .doOnSuccess(order -> model.addAttribute("order", order))
                 .thenReturn("cart");
     }
 
