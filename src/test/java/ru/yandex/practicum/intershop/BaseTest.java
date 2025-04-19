@@ -1,5 +1,6 @@
 package ru.yandex.practicum.intershop;
 
+import com.redis.testcontainers.RedisContainer;
 import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,8 +17,11 @@ public class BaseTest {
             .withUsername("test")
             .withPassword("test");
 
+    private static final RedisContainer redis = new RedisContainer("latest");
+
     static {
         postgres.start();
+        redis.start();
     }
 
     @Autowired
@@ -34,5 +38,8 @@ public class BaseTest {
                 "r2dbc:postgresql://" + postgres.getHost() + ":" + postgres.getFirstMappedPort() + "/" + postgres.getDatabaseName());
         registry.add("spring.r2dbc.username", postgres::getUsername);
         registry.add("spring.r2dbc.password", postgres::getPassword);
+
+        registry.add("spring.redis.host", redis::getHost);
+        registry.add("spring.redis.port", redis::getFirstMappedPort);
     }
 }

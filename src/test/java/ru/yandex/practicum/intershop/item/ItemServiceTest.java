@@ -22,7 +22,7 @@ public class ItemServiceTest extends BaseTest {
 
         itemService.findAll(request)
                 .doOnNext(page -> {
-                    assertThat(page.getNumberOfElements()).isEqualTo(2);
+                    assertThat(page.getSize()).isEqualTo(2);
                     assertThat(page.getContent())
                             .usingRecursiveComparison()
                             .ignoringFields("img")
@@ -47,7 +47,7 @@ public class ItemServiceTest extends BaseTest {
 
         itemService.findAll(request)
                 .doOnNext(page -> {
-                    assertThat(page.getNumberOfElements()).isEqualTo(2);
+                    assertThat(page.getSize()).isEqualTo(2);
                     assertThat(page.getContent())
                             .usingRecursiveComparison()
                             .ignoringFields("img")
@@ -72,7 +72,7 @@ public class ItemServiceTest extends BaseTest {
 
         itemService.findAll(request)
                 .doOnNext(page -> {
-                    assertThat(page.getNumberOfElements()).isEqualTo(2);
+                    assertThat(page.getSize()).isEqualTo(2);
                     assertThat(page.getContent())
                             .usingRecursiveComparison()
                             .ignoringFields("img")
@@ -97,7 +97,7 @@ public class ItemServiceTest extends BaseTest {
 
         itemService.findAll(request)
                 .doOnNext(page -> {
-                    assertThat(page.getNumberOfElements()).isEqualTo(1);
+                    assertThat(page.getTotalElements()).isEqualTo(1);
                     assertThat(page.getContent())
                             .usingRecursiveComparison()
                             .ignoringFields("img")
