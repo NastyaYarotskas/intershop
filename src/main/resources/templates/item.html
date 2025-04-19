@@ -27,13 +27,42 @@
         <p>
             <span th:text="${item.getDescription()}"></span>
         </p>
-        <form th:action="${'/items/'+item.getId()}" method="post">
-            <button name="action" value="MINUS">-</button>
+
+        <form th:attr="data-item-id=${item.getId()}" id="item-form" onsubmit="return false;">
+            <button type="button" onclick="updateItem(this, 'MINUS')">-</button>
             <span th:text="${item.getCount()}"></span>
-            <button name="action" value="PLUS">+</button>
-            <button name="action" value="PLUS" th:if="${item.getCount()==0}" style="float:right;">В корзину</button>
+            <button type="button" onclick="updateItem(this, 'PLUS')">+</button>
+            <button type="button" onclick="updateItem(this, 'PLUS')"
+                    th:if="${item.getCount()==0}" style="float:right;">
+                В корзину
+            </button>
         </form>
     </div>
+
+    <script>
+        function updateItem(buttonElement, action) {
+        const form = buttonElement.closest('form');
+        const itemId = form.getAttribute('data-item-id');
+
+        fetch(`/items/${itemId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ action: action })
+        })
+        .then(response => {
+            if (response.redirected) {
+                window.location.href = response.url; // если сервер вернул redirect
+            } else if (response.ok) {
+                window.location.reload(); // обновить страницу после успешного изменения
+            } else {
+                console.error('Ошибка:', response.status);
+            }
+        })
+        .catch(error => console.error('Ошибка сети:', error));
+    }
+    </script>
 </body>
 
 </html>

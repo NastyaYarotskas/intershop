@@ -17,7 +17,9 @@ public class OrderService {
     private final OrderItemService orderItemService;
     private final ItemService itemService;
 
-    public OrderService(OrderRepository orderRepository, OrderItemService orderItemService, ItemService itemService) {
+    public OrderService(OrderRepository orderRepository,
+                        OrderItemService orderItemService,
+                        ItemService itemService) {
         this.orderRepository = orderRepository;
         this.orderItemService = orderItemService;
         this.itemService = itemService;
