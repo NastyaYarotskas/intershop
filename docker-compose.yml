@@ -1,13 +1,13 @@
 services:
-#  app:
-#    build: .
-#    ports:
-#      - "8081:8081"
-#    environment:
-#      SPRING_R2DBC_URL: r2dbc:postgresql://postgres:5432/intershop_db
-#    depends_on:
-#      - postgres
-#      - redis
+  app:
+    build: .
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_R2DBC_URL: r2dbc:postgresql://postgres:5432/intershop_db
+    depends_on:
+      - postgres
+      - redis
 
   postgres:
     image: postgres:latest
