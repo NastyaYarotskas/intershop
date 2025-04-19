@@ -1,6 +1,7 @@
 package ru.yandex.practicum.intershop.item;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -33,7 +34,7 @@ public class ItemService {
     }
 
     @Cacheable(
-            value = "itemsPageInternal",
+            value = "itemsPage",
             key = "{#request.pageNumber, #request.pageSize, #request.sort, #request.search}",
             unless = "#result == null"
     )
@@ -70,6 +71,7 @@ public class ItemService {
     public record ItemsPageResult(List<List<Item>> itemTable, Paging paging) {
     }
 
+    @CacheEvict(value = "itemsPage", allEntries = true)
     public Mono<Void> save(ItemEntity item) {
         return itemRepository.save(item);
     }
