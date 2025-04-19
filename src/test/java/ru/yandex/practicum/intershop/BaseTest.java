@@ -1,5 +1,6 @@
 package ru.yandex.practicum.intershop;
 
+import com.redis.testcontainers.RedisContainer;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,7 @@ public class BaseTest {
             .withUsername("test")
             .withPassword("test");
 
-    private static final GenericContainer<?> redis = new GenericContainer<>(DockerImageName.parse("redis:latest"))
+    private static final RedisContainer redis = new RedisContainer(DockerImageName.parse("redis:latest"))
                     .withExposedPorts(6379);
 
     static {
