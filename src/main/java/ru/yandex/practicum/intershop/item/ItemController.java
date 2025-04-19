@@ -7,96 +7,34 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import ru.yandex.practicum.intershop.error.EntityNotFoundException;
-import ru.yandex.practicum.intershop.order.OrderEntity;
-import ru.yandex.practicum.intershop.order.OrderService;
-import ru.yandex.practicum.intershop.orderitem.OrderItemService;
 
-import java.util.ArrayList;
 import java.util.Base64;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Controller
 public class ItemController {
 
     private final ItemService itemService;
-    private final OrderService orderService;
-    private final OrderItemService orderItemService;
 
-    public ItemController(ItemService itemService,
-                          OrderService orderService,
-                          OrderItemService orderItemService) {
+    public ItemController(ItemService itemService) {
         this.itemService = itemService;
-        this.orderService = orderService;
-        this.orderItemService = orderItemService;
     }
 
     @GetMapping(value = {"/main/items", "/"})
     public Mono<String> findItems(@ModelAttribute GetItemsRequest request, Model model) {
-        return itemService.findAll(request)
-                .flatMap(page -> {
-                    List<ItemEntity> content = page.getContent();
-                    List<Item> items = ItemMapper.mapTo(content);
-                    List<Item> orderedItems = new ArrayList<>(items);
-
-                    return orderService.findActiveOrderId()
-                            .flatMap(orderId -> Flux.fromIterable(items)
-                                    .index()
-                                    .flatMap(tuple -> {
-                                        Item item = tuple.getT2();
-                                        int originalIndex = tuple.getT1().intValue();
-
-                                        return orderItemService.findOrderItemCount(orderId, item.getId())
-                                                .doOnNext(count -> {
-                                                    item.setCount(count);
-                                                    orderedItems.set(originalIndex, item);
-                                                })
-                                                .thenReturn(item);
-                                    })
-                                    .then(Mono.just(orderedItems))
-                                    .map(updatedItems -> {
-                                        List<List<Item>> itemTable = IntStream.range(0, (updatedItems.size() + 2) / 3)
-                                                .mapToObj(i -> updatedItems.subList(i * 3, Math.min((i + 1) * 3, updatedItems.size())))
-                                                .collect(Collectors.toList());
-
-                                        model.addAttribute("items", itemTable);
-
-                                        int pageNumber = request.getPageNumber() == 0 ? 1 : request.getPageNumber();
-                                        int pageSize = request.getPageSize() == 0 ? 10 : request.getPageSize();
-
-                                        model.addAttribute("paging", new Paging(
-                                                pageNumber,
-                                                pageSize,
-                                                page.hasNext(),
-                                                page.hasPrevious()
-                                        ));
-
-                                        return "main";
-                                    }));
-                });
+        return itemService.getPagedItemsWithOrderCounts(request)
+                .doOnNext(result -> {
+                    model.addAttribute("items", result.itemTable());
+                    model.addAttribute("paging", result.paging());
+                })
+                .thenReturn("main");
     }
 
     @GetMapping("/items/{id}")
     public Mono<String> findItemById(@PathVariable("id") UUID itemId, Model model) {
-        Mono<Item> findItem = itemService.findById(itemId)
-                .switchIfEmpty(Mono.error(new EntityNotFoundException(itemId)))
-                .map(ItemMapper::mapTo);
-
-        Mono<Integer> findItemsCount = orderService.findActiveOrderOrCreateNew()
-                .flatMap(order -> orderItemService.findOrderItemCount(order.getId(), itemId));
-
-        return Mono.zip(findItemsCount, findItem)
-                .doOnNext(tuple -> {
-                    Item item = tuple.getT2();
-                    Integer count = tuple.getT1();
-                    item.setCount(count);
-                    model.addAttribute("item", item);
-                })
+        return itemService.getItemWithCount(itemId)
+                .doOnNext(item -> model.addAttribute("item", item))
                 .thenReturn("item");
     }
 

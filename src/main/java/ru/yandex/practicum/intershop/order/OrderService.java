@@ -4,7 +4,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.yandex.practicum.intershop.error.EntityNotFoundException;
-import ru.yandex.practicum.intershop.item.ItemService;
+import ru.yandex.practicum.intershop.item.ItemEntityService;
+import ru.yandex.practicum.intershop.item.ItemRepository;
 import ru.yandex.practicum.intershop.orderitem.OrderItemMapper;
 import ru.yandex.practicum.intershop.orderitem.OrderItemService;
 
@@ -15,12 +16,14 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderItemService orderItemService;
-    private final ItemService itemService;
+    private final ItemEntityService itemEntityService;
 
-    public OrderService(OrderRepository orderRepository, OrderItemService orderItemService, ItemService itemService) {
+    public OrderService(OrderRepository orderRepository,
+                        OrderItemService orderItemService,
+                        ItemEntityService itemEntityService) {
         this.orderRepository = orderRepository;
         this.orderItemService = orderItemService;
-        this.itemService = itemService;
+        this.itemEntityService = itemEntityService;
     }
 
     public Flux<Order> findCompletedOrders() {
@@ -28,7 +31,7 @@ public class OrderService {
                 .flatMap(order ->
                         orderItemService.findOrderItems(order.getId())
                                 .flatMap(orderItem ->
-                                        itemService.findById(orderItem.getItemId())
+                                        itemEntityService.findById(orderItem.getItemId())
                                                 .map(item -> OrderItemMapper.mapFrom(item, orderItem.getCount()))
                                 )
                                 .collectList()
@@ -59,7 +62,7 @@ public class OrderService {
                 }))
                 .flatMap(order -> orderItemService.findOrderItems(order.getId())
                         .flatMap(orderItem ->
-                                itemService.findById(orderItem.getItemId())
+                                itemEntityService.findById(orderItem.getItemId())
                                         .map(item -> OrderItemMapper.mapFrom(item, orderItem.getCount()))
                         )
                         .collectList()
@@ -80,7 +83,7 @@ public class OrderService {
                 .switchIfEmpty(Mono.error(new EntityNotFoundException(id)))
                 .flatMap(order -> orderItemService.findOrderItems(order.getId())
                         .flatMap(orderItem ->
-                                itemService.findById(orderItem.getItemId())
+                                itemEntityService.findById(orderItem.getItemId())
                                         .map(item -> OrderItemMapper.mapFrom(item, orderItem.getCount()))
                         )
                         .collectList()

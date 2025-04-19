@@ -48,7 +48,7 @@ public class ItemControllerTest extends BaseTest {
 
         Page<ItemEntity> items = new PageImpl<>(List.of(firstItem, secondItem));
 
-        Mockito.when(itemService.findAll(any())).thenReturn(Mono.just(items));
+        Mockito.when(itemService.findAll(any())).thenReturn(Mono.just(PageCacheDto.fromPage(items)));
         Mockito.when(orderService.findActiveOrderId()).thenReturn(Mono.just(orderId));
         Mockito.when(orderItemService.findOrderItemCount(orderId, UUID.fromString("550e8400-e29b-41d4-a716-446655440006"))).thenReturn(Mono.just(1));
         Mockito.when(orderItemService.findOrderItemCount(orderId, UUID.fromString("550e8400-e29b-41d4-a716-446655440008"))).thenReturn(Mono.just(1));
