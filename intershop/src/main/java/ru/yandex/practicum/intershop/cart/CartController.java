@@ -16,24 +16,43 @@ public class CartController {
 
     private final OrderService orderService;
     private final CartService cartService;
+    private final PaymentServiceClient paymentServiceClient;
 
     public CartController(OrderService orderService,
-                          CartService cartService) {
+                          CartService cartService,
+                          PaymentServiceClient paymentServiceClient) {
         this.orderService = orderService;
         this.cartService = cartService;
+        this.paymentServiceClient = paymentServiceClient;
     }
 
     @GetMapping("/cart/items")
     public Mono<String> getCart(Model model) {
-        return orderService.findActiveOrderOrCreateNew()
-                .doOnSuccess(order -> model.addAttribute("order", order))
+        Mono<Balance> balanceMono = paymentServiceClient.getCurrentBalance()
+                .doOnSuccess(b -> model.addAttribute("paymentServiceAvailable", true))
+                .onErrorResume(e -> {
+                    model.addAttribute("paymentServiceAvailable", false);
+                    return Mono.just(new Balance(0));
+                });
+
+        return balanceMono.zipWith(orderService.findActiveOrderOrCreateNew())
+                .doOnSuccess(tuple -> {
+                    model.addAttribute("balance", tuple.getT1().getAmount());
+                    model.addAttribute("order", tuple.getT2());
+                })
                 .thenReturn("cart");
     }
 
     @PostMapping("/buy")
-    public Mono<String> buy() {
-        return orderService.completeOrder()
-                .thenReturn("redirect:/");
+    public Mono<String> makePayment(Model model) {
+        return orderService.findActiveOrderOrCreateNew()
+                .flatMap(order -> paymentServiceClient.makePayment(order.getTotalSum()))
+                .flatMap(balance -> orderService.completeOrder())
+                .thenReturn("redirect:/")
+                .onErrorResume(e -> {
+                    model.addAttribute("errorMessage", "Оплата не прошла");
+                    return Mono.just("error");
+                });
     }
 
     @PostMapping("/cart/items/{id}")
