@@ -5,7 +5,7 @@ FROM openjdk:21-jdk
 WORKDIR /app
 
 # Копируем JAR-файл в контейнер
-COPY target/intershop-0.0.1-SNAPSHOT.jar app.jar
+COPY ./target/intershop-*.jar app.jar
 
 # Открываем порт 8080
 EXPOSE 8080
