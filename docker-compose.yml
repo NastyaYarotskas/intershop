@@ -1,13 +1,25 @@
 services:
-  app:
-    build: .
+  intershop:
+    build:
+      context: ./intershop
+      dockerfile: Dockerfile
     ports:
       - "8081:8081"
     environment:
       SPRING_R2DBC_URL: r2dbc:postgresql://postgres:5432/intershop_db
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      PAYMENT_SERVICE_URL: http://payment-service:8082
     depends_on:
       - postgres
       - redis
+
+  payment-service:
+    build:
+      context: ./payment-service
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
 
   postgres:
     image: postgres:latest
