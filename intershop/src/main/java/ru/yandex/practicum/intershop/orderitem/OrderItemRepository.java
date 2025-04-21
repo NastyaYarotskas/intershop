@@ -1,5 +1,6 @@
 package ru.yandex.practicum.intershop.orderitem;
 
+import org.springframework.data.r2dbc.repository.Modifying;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
@@ -12,9 +13,11 @@ public interface OrderItemRepository extends ReactiveCrudRepository<OrderItemEnt
 
     Mono<OrderItemEntity> findByOrderIdAndItemId(UUID orderId, UUID itemId);
 
+    @Modifying
     @Query("UPDATE orders_items SET count = :count WHERE order_id = :orderId AND item_id = :itemId")
     Mono<Void> updateCount(@Param("orderId") UUID orderId, @Param("itemId") UUID itemId, @Param("count") int count);
 
+    @Modifying
     @Query("DELETE FROM orders_items WHERE order_id = :orderId AND item_id = :itemId")
     Mono<Void> delete(@Param("orderId") UUID orderId, @Param("itemId") UUID itemId);
 

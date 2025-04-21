@@ -1,5 +1,6 @@
 package ru.yandex.practicum.intershop.item;
 
+import org.springframework.data.r2dbc.repository.Modifying;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
@@ -12,13 +13,14 @@ import java.util.UUID;
 @Repository
 public interface ItemRepository extends ReactiveCrudRepository<ItemEntity, UUID> {
 
+    @Modifying
     @Query("""
             INSERT INTO items (price, title, description, img)
             VALUES (:#{#item.price}, :#{#item.title}, :#{#item.description}, :#{#item.img})
             """)
     Mono<Void> save(@Param("item") ItemEntity item);
 
-    @Query("select id, price, description, title, img from items i where id = :id")
+    @Query("SELECT id, price, description, title, img FROM items i WHERE id = :id")
     Mono<ItemEntity> findById(@Param("id") UUID id);
 
     @Query("SELECT id, price, description, title, img FROM items WHERE LOWER(title) LIKE LOWER(CONCAT('%', :title, '%')) " +
