@@ -9,10 +9,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 import ru.yandex.practicum.intershop.BaseTest;
-import ru.yandex.practicum.intershop.feature.cart.Balance;
-import ru.yandex.practicum.intershop.feature.cart.CartService;
-import ru.yandex.practicum.intershop.feature.cart.ItemActionRequest;
-import ru.yandex.practicum.intershop.feature.cart.PaymentServiceClient;
 import ru.yandex.practicum.intershop.feature.order.Order;
 import ru.yandex.practicum.intershop.feature.order.OrderService;
 

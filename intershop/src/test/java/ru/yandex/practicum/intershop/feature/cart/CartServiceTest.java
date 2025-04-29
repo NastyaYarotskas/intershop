@@ -4,14 +4,12 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ru.yandex.practicum.intershop.BaseTest;
-import ru.yandex.practicum.intershop.feature.cart.CartService;
 import ru.yandex.practicum.intershop.feature.order.OrderService;
 import ru.yandex.practicum.intershop.feature.orderitem.OrderItemService;
 
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class CartServiceTest extends BaseTest {
 

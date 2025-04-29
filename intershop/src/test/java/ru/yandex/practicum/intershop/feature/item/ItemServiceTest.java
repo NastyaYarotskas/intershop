@@ -3,9 +3,6 @@ package ru.yandex.practicum.intershop.feature.item;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ru.yandex.practicum.intershop.BaseTest;
-import ru.yandex.practicum.intershop.feature.item.GetItemsRequest;
-import ru.yandex.practicum.intershop.feature.item.ItemEntity;
-import ru.yandex.practicum.intershop.feature.item.ItemService;
 
 import java.util.List;
 import java.util.UUID;

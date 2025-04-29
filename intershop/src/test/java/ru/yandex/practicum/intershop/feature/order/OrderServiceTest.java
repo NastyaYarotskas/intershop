@@ -4,8 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
 import ru.yandex.practicum.intershop.BaseTest;
-import ru.yandex.practicum.intershop.feature.order.OrderEntity;
-import ru.yandex.practicum.intershop.feature.order.OrderService;
 
 import java.util.UUID;
 
