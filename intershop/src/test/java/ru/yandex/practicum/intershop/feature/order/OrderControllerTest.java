@@ -11,8 +11,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.yandex.practicum.intershop.BaseTest;
 import ru.yandex.practicum.intershop.feature.error.EntityNotFoundException;
-import ru.yandex.practicum.intershop.feature.order.Order;
-import ru.yandex.practicum.intershop.feature.order.OrderService;
 
 import java.util.List;
 import java.util.UUID;
