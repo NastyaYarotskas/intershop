@@ -8,8 +8,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
-import ru.yandex.practicum.feature.payment.Balance;
-import ru.yandex.practicum.feature.payment.BalanceRepository;
+
+import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
 
 @SpringBootTest
 @AutoConfigureWebTestClient
@@ -28,7 +28,8 @@ public class PaymentControllerTest {
         Mockito.when(balanceRepository.getCurrentBalance())
                 .thenReturn(Mono.just(new Balance(2000)));
 
-        webTestClient.get()
+        webTestClient.mutateWith(mockJwt())
+                .get()
                 .uri("/payments/balance")
                 .exchange()
                 .expectStatus().isOk()
@@ -49,7 +50,8 @@ public class PaymentControllerTest {
         Mockito.when(balanceRepository.updateBalance(testBalance.getAmount() - paymentAmount))
                 .thenReturn(Mono.just(updatedBalance));
 
-        webTestClient.post()
+        webTestClient.mutateWith(mockJwt())
+                .post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/payments/pay")
                         .queryParam("amount", paymentAmount)
@@ -68,7 +70,8 @@ public class PaymentControllerTest {
         Mockito.when(balanceRepository.getCurrentBalance())
                 .thenReturn(Mono.just(testBalance));
 
-        webTestClient.post()
+        webTestClient.mutateWith(mockJwt())
+                .post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/payments/pay")
                         .queryParam("amount", paymentAmount)
@@ -76,5 +79,19 @@ public class PaymentControllerTest {
                 .exchange()
                 .expectStatus()
                 .isBadRequest();
+    }
+
+    @Test
+    void makePayment_withoutJwt_shouldReturnForbidden() {
+        int paymentAmount = 3000;
+
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/payments/pay")
+                        .queryParam("amount", paymentAmount)
+                        .build())
+                .exchange()
+                .expectStatus()
+                .isUnauthorized();
     }
 }

@@ -47,6 +47,12 @@
 			<version>1.0.2.RELEASE</version>
 		</dependency>
 
+		<!-- Auth -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-client</artifactId>
+		</dependency>
+
 		<!-- Utils -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
