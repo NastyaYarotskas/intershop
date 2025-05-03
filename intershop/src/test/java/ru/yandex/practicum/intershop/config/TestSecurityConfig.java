@@ -17,19 +17,6 @@ import reactor.core.publisher.Mono;
 public class TestSecurityConfig {
 
     @Bean
-    public SecurityWebFilterChain testSecurityFilterChain(ServerHttpSecurity http) {
-        return http
-                .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .authorizeExchange(exchanges -> exchanges
-                        .anyExchange().permitAll()
-                )
-                .oauth2Login(oauth2 -> oauth2
-                        .authenticationManager(authentication -> Mono.empty())
-                )
-                .build();
-    }
-
-    @Bean
     @Primary
     public ReactiveClientRegistrationRepository clientRegistrationRepository() {
         ClientRegistration registration = ClientRegistration

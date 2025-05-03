@@ -2,6 +2,7 @@ package ru.yandex.practicum.intershop.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -51,7 +52,7 @@ public class SecurityConfig {
         return http
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/", "/register", "/login", "/main/items", "/items").permitAll()
-                        .pathMatchers("/items/{id:" + UUID_REGEX + "}").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/items/{id:" + UUID_REGEX + "}").permitAll()
                         .anyExchange().authenticated()
                 )
                 .formLogin(Customizer.withDefaults())

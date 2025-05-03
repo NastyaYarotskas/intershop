@@ -5,6 +5,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
@@ -30,6 +31,7 @@ public class CartControllerTest extends BaseTest {
     WebTestClient webTestClient;
 
     @Test
+    @WithMockUser(username = "test")
     void getCart_orderExists_shouldAddOrderAttributeToModel() {
         Mockito.when(paymentServiceClient.getCurrentBalance()).thenReturn(Mono.just(new Balance(200)));
         Mockito.when(orderService.findActiveOrderOrCreateNew()).thenReturn(Mono.just(new Order(UUID.randomUUID(), List.of())));
@@ -41,6 +43,15 @@ public class CartControllerTest extends BaseTest {
     }
 
     @Test
+    void getCart_unauthorizedUser_shouldRedirectToLoginPage() {
+        webTestClient.get().uri("/cart/items")
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", ".*/login");
+    }
+
+    @Test
+    @WithMockUser(username = "test")
     void makePayment_orderExists_shouldCompleteOrderAndRedirect() {
         Mockito.when(paymentServiceClient.makePayment(anyInt())).thenReturn(Mono.just(new Balance(200)));
         Mockito.when(orderService.findActiveOrderOrCreateNew()).thenReturn(Mono.just(new Order()));
@@ -48,13 +59,28 @@ public class CartControllerTest extends BaseTest {
 
         webTestClient.post().uri("/buy")
                 .exchange()
-                .expectStatus()
-                .is3xxRedirection();
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", "/");
 
         Mockito.verify(orderService, Mockito.times(1)).completeOrder();
     }
 
     @Test
+    void makePayment_unauthorizedUser_shouldRedirectToLoginPage() {
+        Mockito.when(paymentServiceClient.makePayment(anyInt())).thenReturn(Mono.just(new Balance(200)));
+        Mockito.when(orderService.findActiveOrderOrCreateNew()).thenReturn(Mono.just(new Order()));
+        Mockito.when(orderService.completeOrder()).thenReturn(Mono.empty());
+
+        webTestClient.post().uri("/buy")
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", ".*/login");
+
+        Mockito.verify(orderService, Mockito.times(0)).completeOrder();
+    }
+
+    @Test
+    @WithMockUser(username = "test")
     void modifyItemInCartFromCart_paramsArePresent_shouldModifyCartAndRedirect() {
         UUID itemId = UUID.randomUUID();
 
@@ -64,10 +90,24 @@ public class CartControllerTest extends BaseTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(new ItemActionRequest("PLUS"))
                 .exchange()
-                .expectStatus().is3xxRedirection();
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", "/cart/items");
     }
 
     @Test
+    void modifyItemInCartFromCart_unauthorizedUser_shouldRedirectToLoginPage() {
+        UUID itemId = UUID.randomUUID();
+
+        webTestClient.post().uri("/cart/items/" + itemId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new ItemActionRequest("PLUS"))
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", ".*/login");
+    }
+
+    @Test
+    @WithMockUser(username = "test")
     void modifyItemInCartFromItem_paramsArePresent_shouldModifyCartAndRedirect() {
         UUID itemId = UUID.randomUUID();
 
@@ -77,10 +117,24 @@ public class CartControllerTest extends BaseTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(new ItemActionRequest("PLUS"))
                 .exchange()
-                .expectStatus().is3xxRedirection();
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", "/items/" + itemId);
     }
 
     @Test
+    void modifyItemInCartFromItem_unauthorizedUser_shouldRedirectToItemPage() {
+        UUID itemId = UUID.randomUUID();
+
+        webTestClient.post().uri("/items/" + itemId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new ItemActionRequest("PLUS"))
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", ".*/login");
+    }
+
+    @Test
+    @WithMockUser(username = "test")
     void modifyItemInCartFromMain_paramsArePresent_shouldModifyCartAndRedirect() {
         UUID itemId = UUID.randomUUID();
 
@@ -90,6 +144,19 @@ public class CartControllerTest extends BaseTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(new ItemActionRequest("PLUS"))
                 .exchange()
-                .expectStatus().is3xxRedirection();
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", "/");
+    }
+
+    @Test
+    void modifyItemInCartFromMain_unauthorizedUser_shouldRedirectToItemPage() {
+        UUID itemId = UUID.randomUUID();
+
+        webTestClient.post().uri("/main/items/" + itemId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(new ItemActionRequest("PLUS"))
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", ".*/login");
     }
 }
