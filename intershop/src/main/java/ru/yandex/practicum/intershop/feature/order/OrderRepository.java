@@ -10,9 +10,9 @@ import java.util.UUID;
 @Repository
 public interface OrderRepository extends ReactiveCrudRepository<OrderEntity, UUID> {
 
-    Mono<OrderEntity> findFirstByIsNewTrue();
+    Mono<OrderEntity> findFirstByIsNewTrueAndUserId(UUID userId);
 
-    Mono<OrderEntity> findByIsNewTrue();
+    Mono<OrderEntity> findByIsNewTrueAndUserId(UUID userId);
 
-    Flux<OrderEntity> findByIsNewFalse();
+    Flux<OrderEntity> findByIsNewFalseAndUserId(UUID userId);
 }

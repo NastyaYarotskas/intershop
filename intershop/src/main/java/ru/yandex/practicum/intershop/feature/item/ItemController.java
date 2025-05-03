@@ -2,6 +2,7 @@ package ru.yandex.practicum.intershop.feature.item;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,11 +14,9 @@ import reactor.core.publisher.Mono;
 import ru.yandex.practicum.intershop.feature.error.EntityNotFoundException;
 import ru.yandex.practicum.intershop.feature.order.OrderService;
 import ru.yandex.practicum.intershop.feature.orderitem.OrderItemService;
+import ru.yandex.practicum.intershop.feature.user.CustomUserDetails;
 
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.IntStream;
 
 @Controller
@@ -36,8 +35,10 @@ public class ItemController {
     }
 
     @GetMapping(value = {"/main/items", "/"})
-    public Mono<String> findItems(@ModelAttribute GetItemsRequest request, Model model) {
-        return getPagedItemsWithOrderCounts(request)
+    public Mono<String> findItems(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                  @ModelAttribute GetItemsRequest request, Model model) {
+        Optional<UUID> userId = userDetails == null ? Optional.empty() : Optional.of(userDetails.getUserId());
+        return getPagedItemsWithOrderCounts(request, userId)
                 .doOnNext(result -> {
                     model.addAttribute("items", result.itemTable());
                     model.addAttribute("paging", result.paging());
@@ -46,8 +47,9 @@ public class ItemController {
     }
 
     @GetMapping("/items/{id}")
-    public Mono<String> findItemById(@PathVariable("id") UUID itemId, Model model) {
-        return getItemWithCount(itemId)
+    public Mono<String> findItemById(@AuthenticationPrincipal CustomUserDetails userDetails,
+                                     @PathVariable("id") UUID itemId, Model model) {
+        return getItemWithCount(itemId, userDetails.getUserId())
                 .doOnNext(item -> model.addAttribute("item", item))
                 .thenReturn("item");
     }
@@ -68,16 +70,17 @@ public class ItemController {
                 });
     }
 
-    public Mono<ItemService.ItemsPageResult> getPagedItemsWithOrderCounts(GetItemsRequest request) {
+    public Mono<ItemService.ItemsPageResult> getPagedItemsWithOrderCounts(GetItemsRequest request, Optional<UUID> userId) {
         return itemService.findAll(request)
                 .flatMap(page -> {
                     List<ItemEntity> content = page.getContent();
                     List<Item> items = ItemMapper.mapTo(content);
                     List<Item> orderedItems = new ArrayList<>(items);
 
-                    return orderService.findActiveOrderId()
+                    return userId.map(id -> orderService.findActiveOrderId(id)
                             .flatMap(orderId -> updateItemsWithCounts(orderId, items, orderedItems))
-                            .map(updatedItems -> createPageResult(request, page.toPage(), updatedItems));
+                            .map(updatedItems -> createPageResult(request, page.toPage(), updatedItems))).orElseGet(() -> Mono.just(createPageResult(request, page.toPage(), items)));
+
                 });
     }
 
@@ -116,12 +119,12 @@ public class ItemController {
         return new ItemService.ItemsPageResult(itemTable, paging);
     }
 
-    public Mono<Item> getItemWithCount(UUID itemId) {
+    public Mono<Item> getItemWithCount(UUID itemId, UUID userId) {
         Mono<Item> itemMono = itemService.findById(itemId)
                 .switchIfEmpty(Mono.error(new EntityNotFoundException(itemId)))
                 .map(ItemMapper::mapTo);
 
-        Mono<Integer> countMono = orderService.findActiveOrderOrCreateNew()
+        Mono<Integer> countMono = orderService.findActiveOrderOrCreateNew(userId)
                 .flatMap(order -> orderItemService.findOrderItemCount(order.getId(), itemId));
 
         return Mono.zip(countMono, itemMono)

@@ -25,8 +25,8 @@ public class OrderService {
         this.itemService = itemService;
     }
 
-    public Flux<Order> findCompletedOrders() {
-        return orderRepository.findByIsNewFalse()
+    public Flux<Order> findCompletedOrders(UUID userId) {
+        return orderRepository.findByIsNewFalseAndUserId(userId)
                 .flatMap(order ->
                         orderItemService.findOrderItems(order.getId())
                                 .flatMap(orderItem ->
@@ -42,21 +42,22 @@ public class OrderService {
         return orderRepository.findById(id);
     }
 
-    public Mono<OrderEntity> findActiveOrder() {
-        return orderRepository.findFirstByIsNewTrue();
+    public Mono<OrderEntity> findActiveOrder(UUID userId) {
+        return orderRepository.findFirstByIsNewTrueAndUserId(userId);
     }
 
-    public Mono<UUID> findActiveOrderId() {
-        return orderRepository.findFirstByIsNewTrue()
-                .defaultIfEmpty(new OrderEntity(UUID.randomUUID(), true))
+    public Mono<UUID> findActiveOrderId(UUID userId) {
+        return orderRepository.findFirstByIsNewTrueAndUserId(userId)
+                .defaultIfEmpty(new OrderEntity(UUID.randomUUID(), true, UUID.randomUUID()))
                 .flatMap(orderEntity -> Mono.just(orderEntity.getId()));
     }
 
-    public Mono<Order> findActiveOrderOrCreateNew() {
-        return orderRepository.findByIsNewTrue()
+    public Mono<Order> findActiveOrderOrCreateNew(UUID userId) {
+        return orderRepository.findByIsNewTrueAndUserId(userId)
                 .switchIfEmpty(Mono.defer(() -> {
                     OrderEntity newOrder = new OrderEntity();
                     newOrder.setNew(true);
+                    newOrder.setUserId(userId);
                     return orderRepository.save(newOrder);
                 }))
                 .flatMap(order -> orderItemService.findOrderItems(order.getId())
@@ -69,8 +70,8 @@ public class OrderService {
                 );
     }
 
-    public Mono<Void> completeOrder() {
-        return orderRepository.findByIsNewTrue()
+    public Mono<Void> completeOrder(UUID userId) {
+        return orderRepository.findByIsNewTrueAndUserId(userId)
                 .flatMap(order -> {
                     order.setNew(false);
                     return orderRepository.save(order);

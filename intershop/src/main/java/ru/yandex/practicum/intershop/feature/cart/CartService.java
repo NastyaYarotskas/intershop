@@ -25,8 +25,8 @@ public class CartService {
         this.orderItemService = orderItemService;
     }
 
-    public Mono<Void> modifyItemInCart(UUID itemId, String action) {
-        return orderService.findActiveOrderOrCreateNew()
+    public Mono<Void> modifyItemInCart(UUID itemId, String action, UUID userId) {
+        return orderService.findActiveOrderOrCreateNew(userId)
                 .zipWith(itemService.findById(itemId)
                         .switchIfEmpty(Mono.error(new RuntimeException("Item not found"))))
                 .flatMap(tuple -> {

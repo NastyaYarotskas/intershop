@@ -24,8 +24,8 @@ public class CartServiceTest extends BaseTest {
 
     @Test
     void modifyItemInCart_addItem_shouldCreateNewOrderAndAddOneItem() {
-        cartService.modifyItemInCart(ITEM_ID, "PLUS")
-                .doOnNext(ignored -> orderService.findActiveOrderId()
+        cartService.modifyItemInCart(ITEM_ID, "PLUS", testUserId)
+                .doOnNext(ignored -> orderService.findActiveOrderId(testUserId)
                         .doOnNext(orderId -> orderItemService.findOrderItemCount(orderId, ITEM_ID)
                                 .map(count -> {
                                     assertEquals(1, count);
@@ -36,11 +36,11 @@ public class CartServiceTest extends BaseTest {
 
     @Test
     void modifyItemInCart_minusItem_shouldMinusItemFromCart() {
-        orderService.findActiveOrderOrCreateNew()
-                .flatMap(order -> cartService.modifyItemInCart(ITEM_ID, "PLUS")
-                        .then(cartService.modifyItemInCart(ITEM_ID, "PLUS"))
-                        .then(cartService.modifyItemInCart(ITEM_ID, "PLUS"))
-                        .then(cartService.modifyItemInCart(ITEM_ID, "MINUS"))
+        orderService.findActiveOrderOrCreateNew(testUserId)
+                .flatMap(order -> cartService.modifyItemInCart(ITEM_ID, "PLUS", testUserId)
+                        .then(cartService.modifyItemInCart(ITEM_ID, "PLUS", testUserId))
+                        .then(cartService.modifyItemInCart(ITEM_ID, "PLUS", testUserId))
+                        .then(cartService.modifyItemInCart(ITEM_ID, "MINUS", testUserId))
                         .then(orderItemService.findOrderItemCount(order.getId(), ITEM_ID)))
                 .doOnNext(count -> {
                     Assertions.assertThat(count).isEqualTo(2);
@@ -50,9 +50,9 @@ public class CartServiceTest extends BaseTest {
 
     @Test
     void modifyItemInCart_minusItemWithOneCount_shouldDeleteItemFromCart() {
-        orderService.findActiveOrderOrCreateNew()
-                .flatMap(order -> cartService.modifyItemInCart(ITEM_ID, "PLUS")
-                        .then(cartService.modifyItemInCart(ITEM_ID, "MINUS"))
+        orderService.findActiveOrderOrCreateNew(testUserId)
+                .flatMap(order -> cartService.modifyItemInCart(ITEM_ID, "PLUS", testUserId)
+                        .then(cartService.modifyItemInCart(ITEM_ID, "MINUS", testUserId))
                         .then(orderItemService.findOrderItemCount(order.getId(), ITEM_ID)))
                 .doOnNext(count -> {
                     Assertions.assertThat(count).isEqualTo(0);
@@ -62,8 +62,8 @@ public class CartServiceTest extends BaseTest {
 
     @Test
     void modifyItemInCart_minusItemWithZeroCount_shouldDoNothing() {
-        orderService.findActiveOrderOrCreateNew()
-                .flatMap(order -> cartService.modifyItemInCart(ITEM_ID, "MINUS")
+        orderService.findActiveOrderOrCreateNew(testUserId)
+                .flatMap(order -> cartService.modifyItemInCart(ITEM_ID, "MINUS", testUserId)
                         .then(orderItemService.findOrderItemCount(order.getId(), ITEM_ID)))
                 .doOnNext(count -> {
                     Assertions.assertThat(count).isEqualTo(0);
@@ -73,11 +73,11 @@ public class CartServiceTest extends BaseTest {
 
     @Test
     void modifyItemInCart_deleteItem_shouldRemoveItemFromCart() {
-        orderService.findActiveOrderOrCreateNew()
-                .flatMap(order -> cartService.modifyItemInCart(ITEM_ID, "PLUS")
-                        .then(cartService.modifyItemInCart(ITEM_ID, "PLUS"))
-                        .then(cartService.modifyItemInCart(ITEM_ID, "PLUS"))
-                        .then(cartService.modifyItemInCart(ITEM_ID, "DELETE"))
+        orderService.findActiveOrderOrCreateNew(testUserId)
+                .flatMap(order -> cartService.modifyItemInCart(ITEM_ID, "PLUS", testUserId)
+                        .then(cartService.modifyItemInCart(ITEM_ID, "PLUS", testUserId))
+                        .then(cartService.modifyItemInCart(ITEM_ID, "PLUS", testUserId))
+                        .then(cartService.modifyItemInCart(ITEM_ID, "DELETE", testUserId))
                         .then(orderItemService.findOrderItemCount(order.getId(), ITEM_ID)))
                 .doOnNext(count -> {
                     Assertions.assertThat(count).isEqualTo(0);

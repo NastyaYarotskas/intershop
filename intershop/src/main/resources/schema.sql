@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS public.items (
 CREATE TABLE IF NOT EXISTS public.orders (
 	is_new bool NOT NULL,
 	id uuid NOT NULL DEFAULT gen_random_uuid(),
+	user_id uuid NOT NULL,
 	CONSTRAINT orders_pkey PRIMARY KEY (id)
 );
 
@@ -42,3 +43,6 @@ ALTER TABLE public.orders_items DROP CONSTRAINT IF EXISTS fkij1wwgx6o198ubsx1oul
 
 ALTER TABLE public.orders_items ADD CONSTRAINT fkc03a4t5e1xbn9g2qp2k2umr64 FOREIGN KEY (item_id) REFERENCES public.items(id) ON DELETE CASCADE;
 ALTER TABLE public.orders_items ADD CONSTRAINT fkij1wwgx6o198ubsx1oulpopem FOREIGN KEY (order_id) REFERENCES public.orders(id) ON DELETE CASCADE;
+
+ALTER TABLE public.orders DROP CONSTRAINT IF EXISTS fk_orders_users;
+ALTER TABLE public.orders ADD CONSTRAINT fk_orders_users FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;

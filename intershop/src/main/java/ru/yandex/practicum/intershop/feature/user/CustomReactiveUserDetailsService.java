@@ -1,10 +1,12 @@
 package ru.yandex.practicum.intershop.feature.user;
 
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+
+import java.util.Arrays;
 
 @Service
 public class CustomReactiveUserDetailsService implements ReactiveUserDetailsService {
@@ -18,13 +20,17 @@ public class CustomReactiveUserDetailsService implements ReactiveUserDetailsServ
     @Override
     public Mono<UserDetails> findByUsername(String username) {
         return userRepository.findByUsername(username)
-                .map(user -> User.withUsername(user.getUsername())
+                .map(user -> CustomUserDetails.customUserDetailsBuilder()
+                        .userId(user.getId())
+                        .username(user.getUsername())
                         .password(user.getPassword())
-                        .roles(user.getRoles().split(","))
-                        .accountExpired(!user.isActive())
-                        .credentialsExpired(!user.isActive())
-                        .accountLocked(!user.isActive())
-                        .disabled(!user.isActive())
-                        .build());
+                        .authorities(Arrays.stream(user.getRoles().split(","))
+                                .map(role -> new SimpleGrantedAuthority("ROLE_" + role)).toList())
+                        .accountNonExpired(user.isActive())
+                        .credentialsNonExpired(user.isActive())
+                        .accountNonLocked(user.isActive())
+                        .enabled(user.isActive())
+                        .build()
+                );
     }
 }

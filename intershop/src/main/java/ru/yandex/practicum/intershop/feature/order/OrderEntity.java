@@ -18,4 +18,5 @@ public class OrderEntity {
     @Id
     private UUID id;
     private boolean isNew;
+    private UUID userId;
 }
