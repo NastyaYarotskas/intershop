@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -18,6 +19,7 @@ import ru.yandex.practicum.intershop.BaseTest;
 import ru.yandex.practicum.intershop.feature.order.Order;
 import ru.yandex.practicum.intershop.feature.order.OrderService;
 import ru.yandex.practicum.intershop.feature.orderitem.OrderItemService;
+import ru.yandex.practicum.intershop.feature.user.CustomReactiveUserDetailsService;
 
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +36,8 @@ public class ItemControllerTest extends BaseTest {
     OrderItemService orderItemService;
     @MockitoBean
     ItemService itemService;
+    @MockitoBean
+    CustomReactiveUserDetailsService customReactiveUserDetailsService;
     @Autowired
     WebTestClient webTestClient;
 
@@ -48,7 +52,7 @@ public class ItemControllerTest extends BaseTest {
         Page<ItemEntity> items = new PageImpl<>(List.of(firstItem, secondItem));
 
         Mockito.when(itemService.findAll(any())).thenReturn(Mono.just(PageDto.fromPage(items)));
-        Mockito.when(orderService.findActiveOrderId()).thenReturn(Mono.just(orderId));
+        Mockito.when(orderService.findActiveOrderId(any())).thenReturn(Mono.just(orderId));
         Mockito.when(orderItemService.findOrderItemCount(orderId, UUID.fromString("550e8400-e29b-41d4-a716-446655440006"))).thenReturn(Mono.just(1));
         Mockito.when(orderItemService.findOrderItemCount(orderId, UUID.fromString("550e8400-e29b-41d4-a716-446655440008"))).thenReturn(Mono.just(1));
 
@@ -72,10 +76,13 @@ public class ItemControllerTest extends BaseTest {
         UUID orderId = UUID.fromString("550e8400-e29b-41d4-a716-446655440007");
 
         Mockito.when(itemService.findById(itemId)).thenReturn(Mono.just(item));
-        Mockito.when(orderService.findActiveOrderOrCreateNew()).thenReturn(Mono.just(new Order(orderId, List.of())));
+        Mockito.when(orderService.findActiveOrderOrCreateNew(any())).thenReturn(Mono.just(new Order(orderId, List.of())));
         Mockito.when(orderItemService.findOrderItemCount(orderId, itemId)).thenReturn(Mono.just(1));
+        Mockito.when(customReactiveUserDetailsService.findByUsername(any())).thenReturn(Mono.just(mockUser));
 
-        webTestClient.get().uri("/items/{id}", itemId)
+        webTestClient
+                .mutateWith(SecurityMockServerConfigurers.mockUser(mockUser))
+                .get().uri("/items/{id}", itemId)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -93,10 +100,13 @@ public class ItemControllerTest extends BaseTest {
         UUID orderId = UUID.fromString("550e8400-e29b-41d4-a716-446655440007");
 
         Mockito.when(itemService.findById(itemId)).thenReturn(Mono.empty());
-        Mockito.when(orderService.findActiveOrderOrCreateNew()).thenReturn(Mono.just(new Order(orderId, List.of())));
+        Mockito.when(orderService.findActiveOrderOrCreateNew(any())).thenReturn(Mono.just(new Order(orderId, List.of())));
         Mockito.when(orderItemService.findOrderItemCount(orderId, itemId)).thenReturn(Mono.just(1));
+        Mockito.when(customReactiveUserDetailsService.findByUsername(any())).thenReturn(Mono.just(mockUser));
 
-        webTestClient.get().uri("/items/{id}", itemId)
+        webTestClient
+                .mutateWith(SecurityMockServerConfigurers.mockUser(mockUser))
+                .get().uri("/items/{id}", itemId)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(String.class)

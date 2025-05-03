@@ -16,15 +16,15 @@ public class OrderServiceTest extends BaseTest {
 
     @Test
     void findActiveOrderOrCreateNew_activeOrderNotExists_shouldCreateNewOrder() {
-        orderService.findActiveOrder()
+        orderService.findActiveOrder(testUserId)
                 .defaultIfEmpty(new OrderEntity())
                 .flatMap(existing -> {
                     if (existing.getId() != null) {
                         return Mono.error(new AssertionError("Active order should not exist"));
                     }
-                    return orderService.findActiveOrderOrCreateNew();
+                    return orderService.findActiveOrderOrCreateNew(testUserId);
                 })
-                .flatMap(newOrder -> orderService.findActiveOrder()
+                .flatMap(newOrder -> orderService.findActiveOrder(testUserId)
                         .map(active -> {
                             assertNotNull(active);
                             assertEquals(active.getId(), newOrder.getId());
@@ -36,8 +36,8 @@ public class OrderServiceTest extends BaseTest {
 
     @Test
     void findActiveOrderOrCreateNew_activeOrderExists_shouldUseExistentOrder() {
-        orderService.findActiveOrderOrCreateNew()
-                .flatMap(firstOrder -> orderService.findActiveOrderOrCreateNew()
+        orderService.findActiveOrderOrCreateNew(testUserId)
+                .flatMap(firstOrder -> orderService.findActiveOrderOrCreateNew(testUserId)
                         .map(secondOrder -> {
                             assertEquals(firstOrder.getId(), secondOrder.getId());
                             return secondOrder;
@@ -47,10 +47,10 @@ public class OrderServiceTest extends BaseTest {
 
     @Test
     void completeOrder_orderExists_shouldCompleteOrder() {
-        orderService.findActiveOrderOrCreateNew()
+        orderService.findActiveOrderOrCreateNew(testUserId)
                 .flatMap(order -> {
                     UUID orderId = order.getId();
-                    return orderService.completeOrder()
+                    return orderService.completeOrder(testUserId)
                             .then(orderService.findById(orderId));
                 })
                 .doOnNext(completedOrder -> {

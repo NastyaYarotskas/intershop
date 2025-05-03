@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security3">
 
 <head>
     <meta charset="UTF-8"></meta>
@@ -28,7 +28,7 @@
             <span th:text="${item.getDescription()}"></span>
         </p>
 
-        <form th:attr="data-item-id=${item.getId()}" id="item-form" onsubmit="return false;">
+        <form sec:authorize="isAuthenticated()" th:attr="data-item-id=${item.getId()}" id="item-form" onsubmit="return false;">
             <button type="button" onclick="updateItem(this, 'MINUS')">-</button>
             <span th:text="${item.getCount()}"></span>
             <button type="button" onclick="updateItem(this, 'PLUS')">+</button>

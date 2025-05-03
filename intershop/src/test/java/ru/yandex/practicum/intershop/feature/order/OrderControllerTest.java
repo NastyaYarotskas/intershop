@@ -5,35 +5,55 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import ru.yandex.practicum.intershop.BaseTest;
 import ru.yandex.practicum.intershop.feature.error.EntityNotFoundException;
+import ru.yandex.practicum.intershop.feature.user.CustomReactiveUserDetailsService;
 
 import java.util.List;
 import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.any;
 
 @AutoConfigureWebTestClient
 public class OrderControllerTest extends BaseTest {
 
     @MockitoBean
     OrderService orderService;
+    @MockitoBean
+    CustomReactiveUserDetailsService customReactiveUserDetailsService;
     @Autowired
     WebTestClient webTestClient;
 
     @Test
+    @WithMockUser(username = "test")
     void findAll_validRequest_shouldAddOrdersToModelAttributes() {
-        Mockito.when(orderService.findCompletedOrders()).thenReturn(Flux.just(new Order(UUID.randomUUID(), List.of())));
+        Mockito.when(orderService.findCompletedOrders(any())).thenReturn(Flux.just(new Order(UUID.randomUUID(), List.of())));
+        Mockito.when(customReactiveUserDetailsService.findByUsername(any())).thenReturn(Mono.just(mockUser));
 
-        webTestClient.get().uri("/orders")
+        webTestClient
+                .mutateWith(SecurityMockServerConfigurers.mockUser(mockUser))
+                .get().uri("/orders")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.TEXT_HTML);
     }
 
     @Test
+    void findAll_unauthorizedUser_shouldRedirectToLoginPage() {
+        webTestClient.get().uri("/orders")
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", ".*/login");
+    }
+
+    @Test
+    @WithMockUser(username = "test")
     void findOrderById_orderIsPresent_shouldAddFoundOrderToModelAttributes() {
         UUID orderId = UUID.fromString("550e8400-e29b-41d4-a716-446655440006");
 
@@ -46,6 +66,7 @@ public class OrderControllerTest extends BaseTest {
     }
 
     @Test
+    @WithMockUser(username = "test")
     void findOrderById_orderIsNotPresent_shouldRedirectToErrorPage() {
         UUID orderId = UUID.fromString("550e8400-e29b-41d4-a716-446655440006");
 
@@ -55,5 +76,15 @@ public class OrderControllerTest extends BaseTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.TEXT_HTML);
+    }
+
+    @Test
+    void findOrderById_unauthorizedUser_shouldRedirectToLoginPage() {
+        UUID orderId = UUID.fromString("550e8400-e29b-41d4-a716-446655440006");
+
+        webTestClient.get().uri("/orders/" + orderId)
+                .exchange()
+                .expectStatus().is3xxRedirection()
+                .expectHeader().valueMatches("Location", ".*/login");
     }
 }
