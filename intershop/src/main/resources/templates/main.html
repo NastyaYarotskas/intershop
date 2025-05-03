@@ -16,10 +16,10 @@
 <a href="/logout" sec:authorize="isAuthenticated()" style="float:right;">
     <b>ВЫХОД &cudarrr;</b>
 </a>
-<a href="/orders" style="float:right;">
+<a href="/orders" sec:authorize="isAuthenticated()" style="float:right;">
     <b>ЗАКАЗЫ &cudarrr;</b>
 </a>
-<a href="/cart/items" style="float:right;">
+<a href="/cart/items" sec:authorize="isAuthenticated()" style="float:right;">
     <b>КОРЗИНА &cudarrr;</b>
 </a>
 <table style="width:70%;margin-left:auto;margin-right:auto;">
@@ -60,7 +60,7 @@
                 </p>
             </form>
 
-            <button id="add-item-btn">Добавить товар</button>
+            <button id="add-item-btn" sec:authorize="isAuthenticated()">Добавить товар</button>
             <div class="add-item-form" id="add-item-form" style="display:none;">
                 <form th:action="@{/items}" method="POST" th:object="${item}" enctype="multipart/form-data">
                     <p>
@@ -114,7 +114,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <form th:attr="data-item-id=${item.getId()}" id="item-form" onsubmit="return false;">
+                        <form sec:authorize="isAuthenticated()" th:attr="data-item-id=${item.getId()}" id="item-form" onsubmit="return false;">
                             <button type="button" onclick="updateItem(this, 'MINUS')">-</button>
                             <span th:text="${item.getCount()}"></span>
                             <button type="button" onclick="updateItem(this, 'PLUS')">+</button>
