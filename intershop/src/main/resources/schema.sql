@@ -26,6 +26,17 @@ CREATE TABLE IF NOT EXISTS public.orders_items (
 	CONSTRAINT orders_items_pkey PRIMARY KEY (item_id, order_id)
 );
 
+-- DROP TABLE public.users;
+
+CREATE TABLE IF NOT EXISTS public.users (
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    username varchar(255) NOT NULL,
+    password varchar(255) NOT NULL,
+	active boolean NOT NULL DEFAULT TRUE,
+	roles varchar(255) NOT NULL,
+	CONSTRAINT users_pkey PRIMARY KEY (id)
+);
+
 ALTER TABLE public.orders_items DROP CONSTRAINT IF EXISTS fkc03a4t5e1xbn9g2qp2k2umr64;
 ALTER TABLE public.orders_items DROP CONSTRAINT IF EXISTS fkij1wwgx6o198ubsx1oulpopem;
 
