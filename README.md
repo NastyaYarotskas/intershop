@@ -14,8 +14,17 @@
 ### Как запускать в Docker
 
 1. Собрать приложение с помощью `mvn clean package` или `mvn -N wrapper:wrapper`
+2. Добавить в `/etc/hosts`
+   ```bush
+      127.0.0.1 keycloak
+   ```
+3. Сделать файлы `setup-keycloak.sh` `start.sh` исполняемыми
+   ```bush
+      chmod +x setup-keycloak.sh
+      chmod +x start.sh
+   ```
 2. Выполнить команду:
     ```bush 
-        docker compose up --build
+        ./start.sh
     ```
 3. Перейти по ссылке `http://localhost:8081/`
