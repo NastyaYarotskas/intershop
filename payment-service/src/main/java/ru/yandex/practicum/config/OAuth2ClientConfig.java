@@ -19,6 +19,12 @@ public class OAuth2ClientConfig {
     SecurityWebFilterChain securityFilterChain(ServerHttpSecurity security) throws Exception {
         return security
                 .authorizeExchange(requests -> requests
+                        .pathMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/index.html"
+                        ).permitAll()
                         .anyExchange().authenticated()
                 )
                 .oauth2ResourceServer(serverSpec -> serverSpec

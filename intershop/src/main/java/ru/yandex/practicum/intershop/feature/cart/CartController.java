@@ -30,7 +30,7 @@ public class CartController {
 
     @GetMapping("/cart/items")
     public Mono<String> getCart(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
-        Mono<Balance> balanceMono = paymentServiceClient.getCurrentBalance()
+        Mono<Balance> balanceMono = paymentServiceClient.getCurrentBalance(userDetails.getUserId())
                 .doOnSuccess(b -> model.addAttribute("paymentServiceAvailable", true))
                 .onErrorResume(e -> {
                     model.addAttribute("paymentServiceAvailable", false);
@@ -48,7 +48,7 @@ public class CartController {
     @PostMapping("/buy")
     public Mono<String> makePayment(@AuthenticationPrincipal CustomUserDetails userDetails, Model model) {
         return orderService.findActiveOrderOrCreateNew(userDetails.getUserId())
-                .flatMap(order -> paymentServiceClient.makePayment(order.getTotalSum()))
+                .flatMap(order -> paymentServiceClient.makePayment(userDetails.getUserId(), order.getTotalSum()))
                 .flatMap(balance -> orderService.completeOrder(userDetails.getUserId()))
                 .thenReturn("redirect:/")
                 .onErrorResume(e -> {
