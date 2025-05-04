@@ -36,7 +36,7 @@ public class CartControllerTest extends BaseTest {
 
     @Test
     void getCart_orderExists_shouldAddOrderAttributeToModel() {
-        Mockito.when(paymentServiceClient.getCurrentBalance()).thenReturn(Mono.just(new Balance(200)));
+        Mockito.when(paymentServiceClient.getCurrentBalance(any())).thenReturn(Mono.just(new Balance(200)));
         Mockito.when(orderService.findActiveOrderOrCreateNew(any())).thenReturn(Mono.just(new Order(UUID.randomUUID(), List.of())));
 
         Mockito.when(customReactiveUserDetailsService.findByUsername(any())).thenReturn(Mono.just(mockUser));
@@ -59,7 +59,7 @@ public class CartControllerTest extends BaseTest {
 
     @Test
     void makePayment_orderExists_shouldCompleteOrderAndRedirect() {
-        Mockito.when(paymentServiceClient.makePayment(anyInt())).thenReturn(Mono.just(new Balance(200)));
+        Mockito.when(paymentServiceClient.makePayment(any(), anyInt())).thenReturn(Mono.just(new Balance(200)));
         Mockito.when(orderService.findActiveOrderOrCreateNew(any())).thenReturn(Mono.just(new Order()));
         Mockito.when(orderService.completeOrder(any())).thenReturn(Mono.empty());
         Mockito.when(customReactiveUserDetailsService.findByUsername(any())).thenReturn(Mono.just(mockUser));
@@ -76,7 +76,7 @@ public class CartControllerTest extends BaseTest {
 
     @Test
     void makePayment_unauthorizedUser_shouldRedirectToLoginPage() {
-        Mockito.when(paymentServiceClient.makePayment(anyInt())).thenReturn(Mono.just(new Balance(200)));
+        Mockito.when(paymentServiceClient.makePayment(any(), anyInt())).thenReturn(Mono.just(new Balance(200)));
         Mockito.when(orderService.findActiveOrderOrCreateNew(any())).thenReturn(Mono.just(new Order()));
         Mockito.when(orderService.completeOrder(any())).thenReturn(Mono.empty());
 

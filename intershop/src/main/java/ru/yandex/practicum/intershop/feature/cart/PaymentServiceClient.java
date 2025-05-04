@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 @Slf4j
 @Component
 public class PaymentServiceClient {
@@ -22,22 +24,22 @@ public class PaymentServiceClient {
     @Value("${payment.service.url}")
     private String baseUrl;
 
-    public Mono<Balance> getCurrentBalance() {
+    public Mono<Balance> getCurrentBalance(UUID userId) {
         return retrieveToken()
                 .flatMap(accessToken -> WebClient.create(baseUrl)
                         .get()
-                        .uri("/payments/balance")
+                        .uri("/payments/users/" + userId + "/balance")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                         .retrieve()
                         .bodyToMono(Balance.class)
                 );
     }
 
-    public Mono<Balance> makePayment(int amount) {
+    public Mono<Balance> makePayment(UUID userId, int amount) {
         return retrieveToken()
                 .flatMap(accessToken -> WebClient.create(baseUrl)
                         .post()
-                        .uri("/payments/pay?amount=" + amount)
+                        .uri("/payments/users/" + userId+ "/pay?amount=" + amount)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                         .retrieve()
                         .bodyToMono(Balance.class)
